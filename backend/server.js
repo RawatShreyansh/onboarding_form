@@ -9,7 +9,7 @@ const pool = require('./config/db');
 
 // Import file router
 const fileRoutes = require('./router/filerouter');
-
+const kafkaRoutes = require('./router/kafkarouter');
 
 
 const app = express();
@@ -20,6 +20,7 @@ app.use(express.json());
 
 // Mount the routes
 app.use('/', fileRoutes); 
+app.use('/', kafkaRoutes);
 
 app.use(express.static(path.join(__dirname, '../frontend')));
 

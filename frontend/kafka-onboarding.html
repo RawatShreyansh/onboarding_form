@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafka Topic Onboarding</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+
+    <div class="portal-container" style="max-width: 900px; padding-top: 40px;">
+        
+        
+
+        <div class="form-container">
+            <a href="source-select.html" class="back-link">← Back to Source Selection</a>
+            <h2>Configure Kafka Pipeline</h2>
+            <p class="subtitle">Set up a real-time streaming ingestion flow.</p>
+
+            <div class="stepper-container">
+                <div class="step active" id="indicator-step1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Topic Details</div>
+                </div>
+                <div class="step" id="indicator-step2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Target</div>
+                </div>
+                <div class="step" id="indicator-step3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">DQ Rules</div>
+                </div>
+            </div>
+
+            <div id="step1">
+                <form id="step1Form">
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label>Source System Name</label>
+                            <input type="text" id="sourceSystem" placeholder="e.g., PAYMENT_GATEWAY" pattern="^[A-Za-z0-9_]+$" required />
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Kafka Topic Name</label>
+                            <input type="text" id="topicName" placeholder="e.g., live.transactions.events" required />
+                        </div>
+
+                        <div class="input-group">
+                            <label>Kafka Brokers</label>
+                            <input type="text" id="kafkaBrokers" placeholder="e.g., kafka1:9092, kafka2:9092" required />
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Message Payload Format</label>
+                            <select id="messageFormat" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;">
+                                <option value="" disabled selected>Select format...</option>
+                                <option value="JSON">JSON</option>
+                                <option value="AVRO">Avro</option>
+                                <option value="CSV">CSV</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label>Message Fields / JSON Keys (Comma Separated)</label>
+                            <input type="text" id="sourceFields" placeholder="e.g., transaction_id, user_id, amount" required />
+                            <small id="fieldsError" style="color: #dc3545; font-size: 13px; margin-top: 4px; display: none; font-weight: bold;">
+                                Invalid format! Use only letters, numbers, and underscores separated by commas.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: #fef0e6; border: 1px solid #fd7e14; border-radius: 4px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: bold; font-size: 16px; color: #fd7e14;">
+                            <input type="checkbox" id="dqEnable" style="width: 20px; height: 20px; cursor: pointer;" checked>
+                            Enable Data Quality Checks for this topic
+                        </label>
+                    </div>
+
+                    <div class="status-msg" id="step1Status"></div>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 25px; background: #fd7e14;">Next: Target Configuration →</button>
+                </form>
+            </div>
+
+            <div id="step2" style="display: none;">
+                <form id="step2Form">
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label>Target Table Schema</label>
+                            <select id="targetSchema" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;">
+                                <option value="" disabled selected>Loading schemas...</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Target Table Name</label>
+                            <select id="targetTable" required disabled style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; background-color: #f8f9fa;">
+                                <option value="" disabled selected>Select a schema first...</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label>Primary Key Column(s)</label>
+                            <input type="text" id="primaryKey" placeholder="Auto-fetches after table selection..." readonly style="background-color: #e9ecef; cursor: not-allowed; font-weight: bold; color: #0056b3;" required />
+                        </div>
+                    </div>
+
+                    <div class="status-msg" id="step2Status"></div>
+                    <div style="display: flex; gap: 15px; margin-top: 25px;">
+                        <button type="button" id="backToStep1Btn" class="btn-secondary" style="flex: 1; padding: 12px;">← Back</button>
+                        <button type="submit" id="step2ProceedBtn" class="btn-primary" style="flex: 2; padding: 12px; background: #fd7e14;">Proceed →</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="step3" style="display: none;">
+                <div style="background: #e6f0fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #b8daff;">
+                    <span style="font-weight: bold; color: #004085;">Mapping rules for fields: </span> 
+                    <span id="displayTableName" style="color: #0056b3; font-weight: bold;"></span>
+                </div>
+
+                <div id="dynamicColumnsContainer"></div>
+                
+                <div class="status-msg" id="step3Status"></div>
+                <div style="display: flex; gap: 15px; margin-top: 25px;">
+                    <button type="button" id="backToStep2Btn" class="btn-secondary" style="flex: 1; padding: 12px;">← Back</button>
+                    <button type="button" id="saveFinalBtn" class="btn-success" style="display: block; flex: 2; padding: 12px;">💾 Save Kafka Pipeline</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="directoryModal" class="modal-overlay">
+            <div class="source-modal-box" style="text-align: center;">
+                <div style="font-size: 40px; margin-bottom: 15px;">🔐</div>
+                <h3 style="color: #fd7e14; margin-bottom: 10px;">Security Action Required</h3>
+                <p style="color: #6c757d; font-size: 16px; margin-bottom: 25px;">
+                    Please ensure the enterprise Data Engineering Service Account has been granted <strong>READ</strong> access to the Kafka topic: <br><br>
+                    <strong id="displayTopic" style="background: #f8f9fa; padding: 8px 12px; border: 1px dashed #ccc; border-radius: 4px; color: #2b2b2b;"></strong>
+                </p>
+                <button id="confirmDirectoryBtn" class="btn-primary" style="width: 100%; background: #fd7e14;">I Understand, Proceed</button>
+            </div>
+        </div>
+    </div>
+    <script src="scripts/kafka-onboarding.js"></script>
+</body>
+</html>
