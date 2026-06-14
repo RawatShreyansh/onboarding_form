@@ -1,0 +1,576 @@
+/* ==========================================================================
+   Global Variables & Base Resets
+   ========================================================================== */
+:root {
+    --primary-color: #0056b3;
+    --primary-hover: #004494;
+    --success-color: #28a745;
+    --text-main: #2b2b2b;
+    --text-muted: #6c757d;
+    --bg-global: #f4f7f6;
+    --bg-card: #ffffff;
+    --border-color: #dee2e6;
+    --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 12px 24px rgba(0, 86, 179, 0.12);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-global);
+    color: var(--text-main);
+    line-height: 1.6;
+    padding: 40px 20px;
+}
+
+.portal-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ==========================================================================
+   Header Styles (Stays on Top)
+   ========================================================================== */
+.portal-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.portal-logo {
+    max-width: 220px;
+    height: auto;
+    margin-bottom: 15px;
+}
+
+.portal-header h1 {
+    font-size: 32px;
+    color: var(--primary-color);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.portal-subtitle {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ==========================================================================
+   Horizontal Navigation Grid (Single Line Layout)
+   ========================================================================== */
+.portal-row {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    justify-content: center;
+    align-items: stretch; /* Forces all cards to have the exact same height */
+}
+
+.portal-card {
+    background: var(--bg-card);
+    flex: 1; /* Distributes width completely equally among the 3 elements */
+    min-width: 280px;
+    max-width: 380px;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    text-decoration: none;
+    color: inherit;
+    box-shadow: var(--shadow-subtle);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    position: relative;
+}
+
+/* Card Hover Micro-interactions */
+.portal-card:not(.disabled-card):hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--primary-color);
+}
+
+/* Component Icons Inside Cards */
+.card-icon-wrapper {
+    width: 55px;
+    height: 55px;
+    border-radius: 10px;
+    font-size: 26px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.file-icon { background: #e6f0fa; }
+.settings-icon { background: #f0f4f8; }
+.kafka-icon { background: #fef0e6; }
+
+.portal-card h2 {
+    font-size: 20px;
+    color: var(--text-main);
+    margin-bottom: 12px;
+}
+
+.portal-card p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 25px;
+    flex-grow: 1; /* Pushes the action text down neatly to align them */
+}
+
+.card-action-text {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--primary-color);
+    transition: color 0.2s;
+}
+
+.portal-card:hover .card-action-text {
+    color: var(--primary-hover);
+}
+
+/* Disabled/Upcoming Card State */
+.disabled-card {
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+.card-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #ff9800;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+/* Responsive adjustments if the screen becomes exceptionally narrow */
+@media (max-width: 950px) {
+    .portal-row {
+        flex-direction: column;
+        align-items: center;
+    }
+    .portal-card {
+        width: 100%;
+        max-width: 500px;
+    }
+}
+
+
+
+/* =========================================
+   File Onboarding Specific Styles
+   ========================================= */
+.form-container { 
+    background: var(--card-bg, #ffffff); 
+    padding: 30px; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    width: 100%; 
+    max-width: 800px; 
+    margin: 40px auto;
+}
+
+/* =========================================
+   Manage DQ Specific Styles
+   ========================================= */
+.search-box { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 20px; 
+}
+.search-box input { 
+    flex-grow: 1; 
+    padding: 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    font-size: 16px; 
+}
+
+.subtitle { color: var(--text-muted, #6c757d); margin-bottom: 25px; }
+.back-link { display: inline-block; margin-bottom: 20px; text-decoration: none; color: var(--primary-color, #0056b3); font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+
+.input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+.input-group input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+
+.btn-primary { padding: 10px 20px; background: var(--primary-color, #0056b3); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
+.btn-primary:hover { background: var(--hover-color, #004494); }
+
+.btn-success { background: #28a745; color: white; width: 100%; padding: 12px; margin-top: 20px; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; display: none; }
+.btn-success:hover { background: #218838; }
+
+#statusMessage { font-weight: bold; margin-top: 10px; font-size: 14px; }
+
+
+/* =========================================
+   Success Modal (Blur Overlay)
+   ========================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4); /* Darkens the background slightly */
+    backdrop-filter: blur(5px); /* Creates the blurred effect */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* When JavaScript triggers the popup */
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* The White Square Block */
+.success-modal {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 350px;
+    width: 90%;
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Adds a slight "bounce" effect */
+}
+
+.modal-overlay.show .success-modal {
+    transform: scale(1);
+}
+
+/* Styling the SVG Icon */
+.success-icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: drawCheck 0.6s ease forwards 0.2s; /* Animates the checkmark drawing itself */
+}
+
+@keyframes drawCheck {
+    to { stroke-dashoffset: 0; }
+}
+
+.success-modal h3 {
+    margin: 0 0 10px 0;
+    color: #2b2b2b;
+    font-size: 24px;
+}
+
+.success-modal p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* =========================================
+   Dynamic Grid Styles (Minimal Accordion)
+   ========================================= */
+/* .mapping-section { display: none; margin-top: 30px; border-top: 2px solid #e9ecef; padding-top: 20px; } */
+
+/* The main container for each column */
+.column-row { 
+    background: #f8f9fa; 
+    margin-bottom: 12px; 
+    border-radius: 6px; 
+    border: 1px solid #dee2e6; 
+    overflow: hidden; /* Keeps the borders neat when expanding */
+    transition: all 0.3s ease;
+}
+
+/* The clickable header area */
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    cursor: pointer;
+    background: #ffffff;
+    transition: background 0.2s;
+}
+
+.column-header:hover {
+    background: #f0f7ff;
+}
+
+.col-name { 
+    font-weight: bold; 
+    font-size: 16px; 
+    color: var(--primary-color, #0056b3); 
+}
+
+.col-meta {
+    display: block;
+    color: #6c757d;
+    font-weight: normal;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* The + / - Icon */
+.toggle-icon {
+    font-size: 20px;
+    font-weight: bold;
+    color: #6c757d;
+    transition: transform 0.3s;
+}
+
+/* The hidden options box */
+.dq-options { 
+    display: none; /* Hidden by default */
+    padding: 15px; 
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    flex-wrap: wrap; 
+    gap: 10px; 
+}
+
+/* When JavaScript adds this class, the options appear */
+.dq-options.expanded {
+    display: flex;
+}
+
+/* Style for individual checkboxes */
+.checkbox-label { 
+    font-size: 14px; 
+    background: white; 
+    padding: 6px 12px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    gap: 5px; 
+    transition: 0.2s; 
+}
+.checkbox-label:hover { border-color: var(--primary-color, #0056b3); } 
+/* Multi-step form styles */
+.input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.input-grid .input-group { display: flex; flex-direction: column; margin-bottom: 0; }
+.input-grid label { font-weight: bold; color: #333; margin-bottom: 5px; font-size: 14px; }
+.status-msg { font-weight: bold; margin-top: 15px; font-size: 14px; text-align: center; }
+.btn-secondary { background: #6c757d; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+.btn-secondary:hover { background: #5a6268; }
+
+/* Mobile responsiveness for the grid */
+@media (max-width: 600px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+/* =========================================
+   UI Polish: Logo & Grid
+   ========================================= */
+.company-logo {
+    max-width: 250px; /* Adjust this to make your logo bigger/smaller */
+    height: auto;
+}
+
+.options-grid {
+    display: grid;
+    /* This forces all 3 cards to sit in exactly one row */
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* On smaller screens (laptops/tablets), still try to fit them */
+@media (max-width: 900px) {
+    .options-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+}
+
+/* =========================================
+   UI Polish: Breadcrumb Stepper Timeline
+   ========================================= */
+.stepper-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 35px;
+    position: relative;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* The grey connecting line behind the circles */
+.stepper-container::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 10%;
+    width: 80%;
+    height: 3px;
+    background: #e9ecef;
+    z-index: 1;
+}
+
+.step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    width: 33.3%;
+}
+
+.step-circle {
+    width: 41px;
+    height: 42px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    line-height: 34px;
+    margin: 0 auto 8px;
+    font-weight: bold;
+    font-size: 16px;
+    border: 4px solid #ffffff; /* Creates a cutout effect over the line */
+    transition: all 0.3s ease;
+}
+
+.step-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+/* State: When the user is currently on this step */
+.step.active .step-circle {
+    background: #0056b3; /* Primary Blue */
+    color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0,86,179,0.2);
+}
+.step.active .step-label {
+    color: #0056b3;
+}
+
+/* State: When the step is finished */
+.step.completed .step-circle {
+    background: #28a745; /* Success Green */
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   Source Selection Modal Styles
+   ========================================================================== */
+.source-modal-box {
+    background-color: var(--bg-card);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.show .source-modal-box {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--primary-color);
+    font-size: 22px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #dc3545; /* Red on hover to indicate closing */
+}
+
+.source-options-grid {
+    display: flex;
+    gap: 15px;
+}
+
+.source-card {
+    flex: 1; /* Makes both File and Kafka cards exactly the same width */
+    background: var(--bg-global);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.source-card:not(.disabled-card):hover {
+    background: #ffffff;
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-subtle);
+    transform: translateY(-3px);
+}
+
+.source-card h4 {
+    margin-bottom: 5px;
+    font-size: 16px;
+    color: var(--text-main);
+}
+
+.source-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+
+/* =========================================
+   Form Validation Styles
+   ========================================= */
+/* Highlights the input red if the user types invalid characters */
+input:not(:placeholder-shown):invalid {
+    border-color: #dc3545;
+    background-color: #fff8f8;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+/* Highlights the input green if it passes the Regex pattern */
+input:not(:placeholder-shown):valid {
+    border-color: #28a745;
+}
+
+/* Custom error class triggered by JavaScript */
+.input-error {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8 !important;
+}

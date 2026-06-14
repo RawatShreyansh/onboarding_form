@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage DQ Rules</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+
+    <div class="form-container" style="max-width: 800px; margin: 40px auto; padding: 30px;">
+        <a href="index.html" class="back-link">← Back to Portal</a>
+        
+        <h2>Manage Existing DQ Rules</h2>
+        <p class="subtitle">Search for an existing file to add or update its Data Quality checks.</p>
+        
+        <div class="search-box">
+            <input type="text" id="searchFileName" placeholder="Enter Source File Name (e.g., daily_sales.csv)" />
+            <button type="button" id="searchBtn" class="btn-primary">Search Database</button>
+        </div>
+        <div id="statusMessage" class="status-msg"></div>
+
+        <div id="dqEditorSection" style="display: none; margin-top: 30px; border-top: 2px solid #e9ecef; padding-top: 20px;">
+            <h3 style="color: #333; margin-bottom: 20px;">Update Rules for: <span id="displayTableName" style="color: #0056b3;"></span></h3>
+            
+            <div id="dynamicColumnsContainer">
+                </div>
+            
+            <button type="button" id="updateBtn" class="btn-success" style="width: 100%; margin-top: 20px; display: block;">Save Updated DQ Rules</button>
+        </div>
+    </div>
+
+    <script src="scripts/manage-dq.js"></script>
+</body>
+</html>
