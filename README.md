@@ -10,10 +10,10 @@ The Data Engineering Portal allows data engineers and administrators to easily o
 
 ## 🚀 Features
 
-* **Source Onboarding**: Configure new file-based ingestion pipelines with a guided step-by-step wizard.
-* **Dynamic Schema Discovery**: Automatically fetches and displays available PostgreSQL schemas, tables, and primary keys.
-* **Data Quality (DQ) Rule Mapping**: Assign specific data quality checks (e.g., Null Check, Unique Check) to individual columns.
-* **Manage Existing DQ Rules**: Search for existing pipeline configurations and toggle or modify their active Data Quality rules seamlessly with soft-delete capabilities.
+- **Source Onboarding**: Configure new file-based ingestion pipelines with a guided step-by-step wizard.
+- **Dynamic Schema Discovery**: Automatically fetches and displays available PostgreSQL schemas, tables, and primary keys.
+- **Data Quality (DQ) Rule Mapping**: Assign specific data quality checks (e.g., Null Check, Unique Check) to individual columns.
+- **Manage Existing DQ Rules**: Search for existing pipeline configurations and toggle or modify their active Data Quality rules seamlessly with soft-delete capabilities.
 
 ---
 
@@ -148,35 +148,39 @@ flowchart TD
 
 ## 🛠️ Technology Stack
 
-* **Frontend**: Vanilla HTML5, CSS3, JavaScript (Fetch API).
-* **Backend**: Node.js, Express.js.
-* **Database**: PostgreSQL (pg module).
-* **Environment**: dotenv for environment variable management.
-* **Middleware**: CORS for cross-origin resource sharing.
+- **Frontend**: Vanilla HTML5, CSS3, JavaScript (Fetch API).
+- **Backend**: Node.js, Express.js.
+- **Database**: PostgreSQL (pg module).
+- **Environment**: dotenv for environment variable management.
+- **Middleware**: CORS for cross-origin resource sharing.
 
 ---
 
 ## 💻 Getting Started
 
 ### Prerequisites
-* Node.js (v14 or higher)
-* PostgreSQL Database
+
+- Node.js (v14 or higher)
+- PostgreSQL Database
 
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone <repository-url>
    cd onboarding_form
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Configure Environment Variables:**
    Create a `.env` file in the `backend/` directory with your database credentials:
+
    ```env
    DB_USER=your_postgres_user
    DB_HOST=localhost
@@ -188,10 +192,13 @@ flowchart TD
 
 4. **Run the application:**
    For development (uses nodemon):
+
    ```bash
    npm run dev
    ```
+
    For production:
+
    ```bash
    npm start
    ```
