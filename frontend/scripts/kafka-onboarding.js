@@ -155,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
         savedMetadata = {
             source_system_name: document.getElementById('sourceSystem').value.trim(),
             topic_name: document.getElementById('topicName').value.trim(),
-            kafka_brokers: document.getElementById('kafkaBrokers').value.trim(),
             message_format: document.getElementById('messageFormat').value,
             source_fields: document.getElementById('sourceFields').value.trim(),
             target_table_schema: document.getElementById('targetSchema').value,

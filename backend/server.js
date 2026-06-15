@@ -8,8 +8,8 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const pool = require('./config/db'); 
 
 // Import file router
-const fileRoutes = require('./router/filerouter');
-const kafkaRoutes = require('./router/kafkarouter');
+const fileRoutes = require('./routes/fileRoutes');
+const kafkaRoutes = require('./routes/kafkaRoutes');
 
 
 const app = express();

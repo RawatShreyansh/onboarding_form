@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Engineering Portal</title>
-    <link rel="stylesheet" href= "styles/style.css">
+    <link rel="stylesheet" href="styles/style.css"> 
 </head>
 <body>
 
@@ -16,19 +16,21 @@
         </header>
 
         <main class="portal-row">
-            <a href="source-select.html" class="portal-card">
+            
+            <a href="pages/source-select.html" class="portal-card">
                 <div class="card-icon-wrapper" style="background: #e6f0fa;">🔌</div>
                 <h2>Source Onboarding</h2>
-                <p>Configure new ingestion pipelines for Files or real-time Kafka streams.</p>
+                <p>Configure new ingestion pipelines for flat files or real-time Kafka streams.</p>
                 <div class="card-action-text">Select Source Type →</div>
             </a>
 
-            <a href="manage-dq.html" class="portal-card">
-                <div class="card-icon-wrapper settings-icon">⚙️</div>
+            <a href="pages/manage-dq-select.html" class="portal-card">
+                <div class="card-icon-wrapper settings-icon" style="background: #e9ecef;">⚙️</div>
                 <h2>Manage DQ Rules</h2>
                 <p>Modify, add, or toggle data quality validation rules for existing active data pipelines.</p>
-                <div class="card-action-text">Adjust Rules →</div>
+                <div class="card-action-text">Select Pipeline Type →</div>
             </a>
+
         </main>
     </div>
 

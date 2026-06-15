@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Pipeline - Manage DQ</title>
+    <link rel="stylesheet" href="../styles/style.css">
+</head>
+<body>
+
+    <div class="portal-container" style="max-width: 900px; padding-top: 40px;">
+        
+        <a href="../index.html" class="back-link">← Back to Portal</a>
+        
+        <header class="portal-header" style="margin-top: 20px;">
+            <h1>Manage Data Quality</h1>
+            <p class="portal-subtitle">Select the type of data pipeline you need to update.</p>
+        </header>
+
+        <main class="portal-row">
+            
+            <a href="manage-dq.html" class="portal-card">
+                <div class="card-icon-wrapper" style="background: #e9ecef;">📁</div>
+                <h2>File Pipelines</h2>
+                <p>Manage Data Quality mapping rules for batch file (CSV, JSON, Parquet) ingestion pipelines.</p>
+                <div class="card-action-text">Manage File Rules →</div>
+            </a>
+
+            <a href="manage-kafka-dq.html" class="portal-card" style="border-top: 4px solid #fd7e14;">
+                <div class="card-icon-wrapper" style="background: #fef0e6; color: #fd7e14; font-size: 28px;">⚡</div>
+                <h2>Kafka Topics</h2>
+                <p>Manage Data Quality mapping rules for live, real-time streaming Kafka topics.</p>
+                <div class="card-action-text" style="color: #fd7e14;">Manage Kafka Rules →</div>
+            </a>
+
+        </main>
+    </div>
+
+</body>
+</html>

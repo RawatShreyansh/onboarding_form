@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } 
         // If we are already on Step 1, go back to the main portal menu!
         else {
-            window.location.href = 'index.html'; // Change to 'source-select.html' if you prefer!
+            window.location.href = '../index.html'; // Change to 'source-select.html' if you prefer!
         }
     });
 
