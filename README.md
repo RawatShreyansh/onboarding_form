@@ -4,37 +4,44 @@ Welcome to the **Data Engineering Portal**! This platform provides a centralized
 
 ## 🌟 Overview
 
-The Data Engineering Portal allows data engineers and administrators to easily onboard new data sources (such as files or Kafka streams) and define strict data quality rules before data is ingested into target PostgreSQL tables. The portal is built with a Node.js Express backend and a responsive Vanilla HTML/CSS/JS frontend, communicating with a PostgreSQL database to store configuration and metadata.
+The Data Engineering Portal allows data engineers and administrators to easily onboard new data sources (such as batch files or real-time Kafka streams) and define strict data quality rules before data is ingested into target PostgreSQL tables. The portal is built with a Node.js Express backend and a responsive Vanilla HTML/CSS/JS frontend, communicating with a PostgreSQL database to store configuration and metadata.
 
 ---
 
 ## 🚀 Features
 
-- **Source Onboarding**: Configure new file-based ingestion pipelines with a guided step-by-step wizard.
+- **Source Onboarding**: Configure new file-based batch pipelines or Kafka streaming topics using a guided step-by-step wizard.
 - **Dynamic Schema Discovery**: Automatically fetches and displays available PostgreSQL schemas, tables, and primary keys.
-- **Data Quality (DQ) Rule Mapping**: Assign specific data quality checks (e.g., Null Check, Unique Check) to individual columns.
-- **Manage Existing DQ Rules**: Search for existing pipeline configurations and toggle or modify their active Data Quality rules seamlessly with soft-delete capabilities.
+- **Data Quality (DQ) Rule Mapping**: Assign specific data quality checks (e.g., Null Check, Unique Check) to individual columns for both files and Kafka topics.
+- **Manage Existing DQ Rules**: Search for existing file or Kafka pipeline configurations and toggle or modify their active Data Quality rules seamlessly with soft-delete capabilities.
+- **MVC Architecture**: A clean, scalable Model-View-Controller backend structure separates routing, business logic, and database interactions.
 
 ---
 
 ## 🏗️ Architecture
 
-The application follows a standard three-tier architecture:
+The application follows a standard three-tier architecture, utilizing the MVC pattern on the backend:
 
 ```mermaid
 graph TD
     subgraph Frontend
         UI[Web UI HTML/CSS/JS]
         FileOnboarding[File Onboarding Wizard]
+        KafkaOnboarding[Kafka Onboarding Wizard]
         DQManage[Manage DQ Rules]
         UI --> FileOnboarding
+        UI --> KafkaOnboarding
         UI --> DQManage
     end
 
     subgraph Backend
         API[Node.js Express Server]
-        Router[API Router]
-        API --> Router
+        Routes[API Routes]
+        Controllers[Controllers]
+        Models[Models]
+        API --> Routes
+        Routes --> Controllers
+        Controllers --> Models
     end
 
     subgraph Database
@@ -42,20 +49,24 @@ graph TD
     end
 
     FileOnboarding -- HTTP POST/GET --> API
+    KafkaOnboarding -- HTTP POST/GET --> API
     DQManage -- HTTP POST/GET --> API
-    Router -- pg connection --> PG
+    Models -- pg connection --> PG
 ```
 
 ---
 
 ## 🗄️ Database Entity-Relationship (ER) Diagram
 
-The system stores pipeline metadata and data quality configurations across several relational tables:
+The system stores pipeline metadata and data quality configurations across several relational tables for both Files and Kafka:
 
 ```mermaid
 erDiagram
     nifi_file_source_config ||--o{ nifi_file_src_metadata : "has fields"
     nifi_file_source_config ||--o{ nifi_file_source_dq_config : "has dq rules"
+
+    nifi_kafka_source_config ||--o{ nifi_kafka_src_metadata : "has fields"
+    nifi_kafka_source_config ||--o{ nifi_kafka_source_dq_config : "has dq rules"
 
     nifi_file_source_config {
         int src_object_key PK
@@ -70,9 +81,26 @@ erDiagram
         string primary_key
     }
 
+    nifi_kafka_source_config {
+        int src_object_key PK
+        string source_system
+        string topic_name
+        string message_format
+        string tgt_schema_name
+        string tgt_table_name
+        string primary_key
+        int dq_enable_flag
+    }
+
     nifi_file_src_metadata {
         int src_object_key FK
         string source_file_name
+        string field_name
+    }
+
+    nifi_kafka_src_metadata {
+        int src_object_key FK
+        string topic_name
         string field_name
     }
 
@@ -82,15 +110,22 @@ erDiagram
         string dq_rule_name
         int is_dq_active
     }
+
+    nifi_kafka_source_dq_config {
+        int src_obj_key FK
+        string dq_column_name
+        string dq_rule_name
+        int dq_flag
+    }
 ```
 
 ---
 
 ## 🔄 Core Workflows
 
-### 1. File Source Onboarding Process
+### 1. Source Onboarding Process (File & Kafka)
 
-The onboarding wizard guides users through configuring a new data pipeline:
+The onboarding wizards guide users through configuring a new data pipeline (either File or Kafka):
 
 ```mermaid
 sequenceDiagram
@@ -99,7 +134,7 @@ sequenceDiagram
     participant API as Backend API
     participant DB as Postgres Database
 
-    User->>UI: Enter Source Name, File, Fields
+    User->>UI: Enter Source Details, Topic/File, Fields
     UI->>API: Fetch Target Schemas
     API->>DB: Query information_schema.schemata
     DB-->>API: Return Schemas
@@ -115,10 +150,10 @@ sequenceDiagram
     DB-->>API: Return Primary Key
     API-->>UI: Auto-populate Primary Key
     User->>UI: Assign DQ Rules to Fields
-    UI->>API: POST /api/file-onboarding (Transaction)
-    API->>DB: INSERT into nifi_file_source_config
-    API->>DB: INSERT into nifi_file_src_metadata
-    API->>DB: INSERT into nifi_file_source_dq_config
+    UI->>API: POST /api/file-onboarding OR /api/kafka-onboarding
+    API->>DB: INSERT into Config Table
+    API->>DB: INSERT into Metadata Table
+    API->>DB: INSERT into DQ Rules Table
     DB-->>API: COMMIT
     API-->>UI: Success Message
     UI-->>User: "Pipeline configuration successfully saved"
@@ -126,18 +161,18 @@ sequenceDiagram
 
 ### 2. Managing Data Quality (DQ) Rules
 
-Engineers can update rules for existing pipelines safely using a soft-delete mechanism:
+Engineers can update rules for existing File or Kafka pipelines safely using a soft-delete mechanism:
 
 ```mermaid
 flowchart TD
-    A[User inputs File Name] --> B{File Exists?}
+    A[User inputs File or Topic Name] --> B{Source Exists?}
     B -- No --> C[Display Error]
-    B -- Yes --> D[Fetch File Config & Active Rules]
+    B -- Yes --> D[Fetch Config & Active Rules]
     D --> E[User modifies/adds rules in UI]
     E --> F[Submit Changes]
     F --> G[BEGIN DB TRANSACTION]
-    G --> H[Soft Delete: UPDATE is_dq_active = 0]
-    H --> I[Reactivate existing rules: UPDATE is_dq_active = 1]
+    G --> H[Soft Delete: UPDATE active flag = 0]
+    H --> I[Reactivate existing rules: UPDATE active flag = 1]
     I --> J[Insert brand new rules]
     J --> K[Update master dq_enable_flag]
     K --> L[COMMIT TRANSACTION]
@@ -148,8 +183,8 @@ flowchart TD
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: Vanilla HTML5, CSS3, JavaScript (Fetch API).
-- **Backend**: Node.js, Express.js.
+- **Frontend**: Vanilla HTML5, CSS3, JavaScript (Fetch API). Organized via feature pages.
+- **Backend**: Node.js, Express.js (MVC Architecture).
 - **Database**: PostgreSQL (pg module).
 - **Environment**: dotenv for environment variable management.
 - **Middleware**: CORS for cross-origin resource sharing.
@@ -179,16 +214,12 @@ flowchart TD
    ```
 
 3. **Configure Environment Variables:**
-   Create a `.env` file in the `backend/` directory with your database credentials:
+   Copy the example environment file in the backend directory and configure it with your database credentials:
 
-   ```env
-   DB_USER=your_postgres_user
-   DB_HOST=localhost
-   DB_DATABASE=your_database_name
-   DB_PASSWORD=your_postgres_password
-   DB_PORT=5432
-   PORT=5000
+   ```bash
+   cp backend/.env.example backend/.env
    ```
+   *Edit `backend/.env` with your actual Postgres details.*
 
 4. **Run the application:**
    For development (uses nodemon):
