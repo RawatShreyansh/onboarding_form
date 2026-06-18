@@ -22,7 +22,9 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-global);
+    /* Adding a modern gradient to make the glass effect visible */
+    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    background-attachment: fixed;
     color: var(--text-main);
     line-height: 1.6;
     padding: 40px 20px;
@@ -75,16 +77,18 @@ body {
 }
 
 .portal-card {
-    background: var(--bg-card);
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     flex: 1; /* Distributes width completely equally among the 3 elements */
     min-width: 280px;
     max-width: 380px;
     padding: 30px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
     text-decoration: none;
     color: inherit;
-    box-shadow: var(--shadow-subtle);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
     display: flex;
     flex-direction: column;
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
@@ -175,10 +179,13 @@ body {
    File Onboarding Specific Styles
    ========================================= */
 .form-container { 
-    background: var(--card-bg, #ffffff); 
-    padding: 30px; 
-    border-radius: 8px; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 40px; 
+    border-radius: 16px; 
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07); 
     width: 100%; 
     max-width: 800px; 
     margin: 40px auto;
@@ -194,10 +201,18 @@ body {
 }
 .search-box input { 
     flex-grow: 1; 
-    padding: 10px; 
-    border: 1px solid #ccc; 
-    border-radius: 4px; 
+    padding: 12px; 
+    background: rgba(255, 255, 255, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important; 
+    border-radius: 8px !important; 
     font-size: 16px; 
+    transition: all 0.3s ease;
+}
+.search-box input:focus {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-color: var(--primary-color) !important;
+    outline: none;
+    box-shadow: 0 0 8px rgba(0, 86, 179, 0.2);
 }
 
 .subtitle { color: var(--text-muted, #6c757d); margin-bottom: 25px; }
@@ -205,13 +220,77 @@ body {
 .back-link:hover { text-decoration: underline; }
 
 .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-.input-group input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+.input-group input, .input-group select, .input-grid select { 
+    flex-grow: 1; 
+    padding: 12px !important; 
+    background: rgba(255, 255, 255, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important; 
+    border-radius: 8px !important; 
+    font-size: 16px !important; 
+    transition: all 0.3s ease;
+}
+.input-group input:focus, .input-group select:focus, .input-grid select:focus {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-color: var(--primary-color) !important;
+    outline: none;
+    box-shadow: 0 0 8px rgba(0, 86, 179, 0.2);
+}
 
-.btn-primary { padding: 10px 20px; background: var(--primary-color, #0056b3); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
-.btn-primary:hover { background: var(--hover-color, #004494); }
+.btn-primary { 
+    padding: 12px 20px; 
+    background: linear-gradient(135deg, #0056b3, #004494);
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-size: 16px; 
+    font-weight: bold; 
+    box-shadow: 0 4px 15px rgba(0, 86, 179, 0.3);
+    transition: all 0.3s ease;
+}
+.btn-primary:hover { 
+    background: linear-gradient(135deg, #004494, #003377);
+    box-shadow: 0 6px 20px rgba(0, 86, 179, 0.4);
+    transform: translateY(-2px);
+}
 
-.btn-success { background: #28a745; color: white; width: 100%; padding: 12px; margin-top: 20px; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; display: none; }
-.btn-success:hover { background: #218838; }
+.btn-secondary {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    transition: all 0.3s ease;
+}
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #5a6268, #4e555b);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-success { 
+    background: linear-gradient(135deg, #28a745, #218838);
+    color: white; 
+    width: 100%; 
+    padding: 12px; 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 16px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    display: none; 
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
+}
+.btn-success:hover { 
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    transform: translateY(-2px);
+}
 
 #statusMessage { font-weight: bold; margin-top: 10px; font-size: 14px; }
 
@@ -244,10 +323,13 @@ body {
 
 /* The White Square Block */
 .success-modal {
-    background-color: #ffffff;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
     text-align: center;
     max-width: 350px;
     width: 90%;
@@ -293,12 +375,20 @@ body {
 
 /* The main container for each column */
 .column-row { 
-    background: #f8f9fa; 
-    margin-bottom: 12px; 
-    border-radius: 6px; 
-    border: 1px solid #dee2e6; 
-    overflow: hidden; /* Keeps the borders neat when expanding */
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    margin-bottom: 16px; 
+    border-radius: 10px; 
+    border: 1px solid rgba(255, 255, 255, 0.8); 
+    border-left: 5px solid var(--primary-color);
+    overflow: hidden; 
     transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+.column-row:hover {
+    box-shadow: 0 6px 20px rgba(0, 86, 179, 0.08);
+    transform: translateY(-2px);
 }
 
 /* The clickable header area */
@@ -306,46 +396,51 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
+    padding: 16px 20px;
     cursor: pointer;
-    background: #ffffff;
+    background: transparent;
     transition: background 0.2s;
 }
 
 .column-header:hover {
-    background: #f0f7ff;
+    background: rgba(0, 86, 179, 0.04);
 }
 
 .col-name { 
-    font-weight: bold; 
+    font-weight: 700; 
     font-size: 16px; 
     color: var(--primary-color, #0056b3); 
+    letter-spacing: 0.3px;
 }
 
 .col-meta {
     display: block;
-    color: #6c757d;
-    font-weight: normal;
-    font-size: 12px;
-    margin-top: 4px;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 13px;
+    margin-top: 5px;
 }
 
 /* The + / - Icon */
 .toggle-icon {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
-    color: #6c757d;
-    transition: transform 0.3s;
+    color: var(--primary-color);
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.column-row:hover .toggle-icon {
+    color: var(--primary-hover);
 }
 
 /* The hidden options box */
 .dq-options { 
     display: none; /* Hidden by default */
-    padding: 15px; 
-    background: #f8f9fa;
-    border-top: 1px solid #dee2e6;
+    padding: 20px; 
+    background: rgba(0, 86, 179, 0.02);
+    border-top: 1px solid rgba(0, 86, 179, 0.1);
     flex-wrap: wrap; 
-    gap: 10px; 
+    gap: 12px; 
 }
 
 /* When JavaScript adds this class, the options appear */
@@ -356,24 +451,51 @@ body {
 /* Style for individual checkboxes */
 .checkbox-label { 
     font-size: 14px; 
-    background: white; 
-    padding: 6px 12px; 
-    border: 1px solid #ccc; 
-    border-radius: 4px; 
+    font-weight: 500;
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.8); 
+    padding: 8px 16px; 
+    border: 1px solid rgba(0, 86, 179, 0.2); 
+    border-radius: 8px; 
     cursor: pointer; 
     display: flex; 
     align-items: center; 
-    gap: 5px; 
-    transition: 0.2s; 
+    gap: 8px; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
-.checkbox-label:hover { border-color: var(--primary-color, #0056b3); } 
+.checkbox-label:hover { 
+    border-color: var(--primary-color); 
+    background: #ffffff;
+    box-shadow: 0 4px 10px rgba(0, 86, 179, 0.1);
+    transform: translateY(-1px);
+} 
+.checkbox-label input[type="checkbox"] {
+    accent-color: var(--primary-color);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
 /* Multi-step form styles */
 .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .input-grid .input-group { display: flex; flex-direction: column; margin-bottom: 0; }
 .input-grid label { font-weight: bold; color: #333; margin-bottom: 5px; font-size: 14px; }
 .status-msg { font-weight: bold; margin-top: 15px; font-size: 14px; text-align: center; }
-.btn-secondary { background: #6c757d; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-.btn-secondary:hover { background: #5a6268; }
+.btn-secondary { 
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    transition: all 0.3s ease;
+}
+.btn-secondary:hover { 
+    background: linear-gradient(135deg, #5a6268, #495057);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    transform: translateY(-2px);
+}
 
 /* Mobile responsiveness for the grid */
 @media (max-width: 600px) {
@@ -438,13 +560,15 @@ body {
     width: 41px;
     height: 42px;
     border-radius: 50%;
-    background: #e9ecef;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     color: #6c757d;
     line-height: 34px;
     margin: 0 auto 8px;
     font-weight: bold;
     font-size: 16px;
-    border: 4px solid #ffffff; /* Creates a cutout effect over the line */
+    border: 4px solid rgba(255, 255, 255, 0.8);
     transition: all 0.3s ease;
 }
 
@@ -475,10 +599,13 @@ body {
    Source Selection Modal Styles
    ========================================================================== */
 .source-modal-box {
-    background-color: var(--bg-card);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
     width: 90%;
     max-width: 500px;
     transform: scale(0.8);
@@ -523,9 +650,11 @@ body {
 
 .source-card {
     flex: 1; /* Makes both File and Kafka cards exactly the same width */
-    background: var(--bg-global);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px;
     padding: 20px;
     text-decoration: none;
     color: inherit;
@@ -574,3 +703,127 @@ input:not(:placeholder-shown):valid {
     border-color: #dc3545 !important;
     background-color: #fff8f8 !important;
 }
+
+/* =========================================
+   Utility & Extracted Component Classes
+   ========================================= */
+
+/* Text & Colors */
+.text-danger { color: #dc3545; }
+.text-primary { color: #0056b3; }
+.text-orange { color: #fd7e14; }
+.text-dark { color: #333; }
+.text-bold { font-weight: bold; }
+.font-13 { font-size: 13px; }
+.font-16 { font-size: 16px; }
+.emoji-large { font-size: 40px; margin-bottom: 15px; }
+
+/* Spacing & Layout */
+.mt-4 { margin-top: 4px; }
+.mt-20 { margin-top: 20px; }
+.mt-25 { margin-top: 25px; }
+.mt-30 { margin-top: 30px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-15 { margin-bottom: 15px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-25 { margin-bottom: 25px; }
+.mb-40 { margin-bottom: 40px; }
+.pt-20 { padding-top: 20px; }
+.pt-40 { padding-top: 40px; }
+.w-100 { width: 100%; }
+.d-block { display: block; }
+.d-none { display: none; }
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+
+.max-w-800 { max-width: 800px; margin: 40px auto; padding: 30px; }
+.max-w-900 { max-width: 900px; padding-top: 40px; }
+
+.input-span-2 { grid-column: span 2; }
+.form-actions { display: flex; gap: 15px; margin-top: 25px; }
+.btn-flex-1 { flex: 1; }
+.btn-flex-2 { flex: 2; }
+
+/* Components */
+.error-text {
+    color: #dc3545;
+    font-size: 13px;
+    margin-top: 4px;
+    display: none;
+    font-weight: bold;
+}
+
+.input-readonly {
+    background-color: #e9ecef !important;
+    cursor: not-allowed !important;
+    font-weight: bold;
+    color: #0056b3;
+}
+
+.checkbox-container {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.kafka-checkbox-container {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fef0e6;
+    border: 1px solid #fd7e14;
+    border-radius: 4px;
+}
+
+.checkbox-label-styled {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    color: #0056b3;
+}
+
+.kafka-checkbox-label-styled {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    color: #fd7e14;
+}
+
+.mapping-rules-container {
+    background: #e6f0fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #b8daff;
+}
+
+.editor-section {
+    display: none;
+    margin-top: 30px;
+    border-top: 2px solid #e9ecef;
+    padding-top: 20px;
+}
+
+.security-box-text {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+    color: #2b2b2b;
+}
+
+.btn-kafka {
+    background: #fd7e14 !important;
+    border-color: #fd7e14 !important;
+}
+
+.card-icon-folder { background: #e9ecef; }
+.card-icon-kafka { background: #fef0e6; color: #fd7e14; font-size: 28px; }
+.portal-card-kafka { border-top: 4px solid #fd7e14; }

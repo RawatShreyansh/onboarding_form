@@ -8,7 +8,7 @@
 </head>
 <body>
 
-    <div class="portal-container" style="max-width: 900px; padding-top: 40px;">
+    <div class="portal-container max-w-900">
         
         
 
@@ -47,7 +47,7 @@
                         
                         <div class="input-group">
                             <label>Message Payload Format</label>
-                            <select id="messageFormat" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;">
+                            <select id="messageFormat" required class="w-100">
                                 <option value="" disabled selected>Select format...</option>
                                 <option value="JSON">JSON</option>
                                 <option value="AVRO">Avro</option>
@@ -55,81 +55,81 @@
                             </select>
                         </div>
 
-                        <div class="input-group" style="grid-column: span 2;">
+                        <div class="input-group input-span-2">
                             <label>Message Fields / JSON Keys (Comma Separated)</label>
                             <input type="text" id="sourceFields" placeholder="e.g., transaction_id, user_id, amount" required />
-                            <small id="fieldsError" style="color: #dc3545; font-size: 13px; margin-top: 4px; display: none; font-weight: bold;">
+                            <small id="fieldsError" class="error-text">
                                 Invalid format! Use only letters, numbers, and underscores separated by commas.
                             </small>
                         </div>
                     </div>
 
-                    <div style="margin-top: 20px; padding: 15px; background: #fef0e6; border: 1px solid #fd7e14; border-radius: 4px;">
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: bold; font-size: 16px; color: #fd7e14;">
+                    <div class="kafka-checkbox-container">
+                        <label class="kafka-checkbox-label-styled">
                             <input type="checkbox" id="dqEnable" style="width: 20px; height: 20px; cursor: pointer;" checked>
                             Enable Data Quality Checks for this topic
                         </label>
                     </div>
 
                     <div class="status-msg" id="step1Status"></div>
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 25px; background: #fd7e14;">Next: Target Configuration →</button>
+                    <button type="submit" class="btn-primary btn-kafka w-100 mt-25">Next: Target Configuration →</button>
                 </form>
             </div>
 
-            <div id="step2" style="display: none;">
+            <div id="step2" class="d-none">
                 <form id="step2Form">
                     <div class="input-grid">
                         <div class="input-group">
                             <label>Target Table Schema</label>
-                            <select id="targetSchema" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;">
+                            <select id="targetSchema" required class="w-100">
                                 <option value="" disabled selected>Loading schemas...</option>
                             </select>
                         </div>
                         <div class="input-group">
                             <label>Target Table Name</label>
-                            <select id="targetTable" required disabled style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; background-color: #f8f9fa;">
+                            <select id="targetTable" required disabled class="w-100">
                                 <option value="" disabled selected>Select a schema first...</option>
                             </select>
                         </div>
-                        <div class="input-group" style="grid-column: span 2;">
+                        <div class="input-group input-span-2">
                             <label>Primary Key Column(s)</label>
-                            <input type="text" id="primaryKey" placeholder="Auto-fetches after table selection..." readonly style="background-color: #e9ecef; cursor: not-allowed; font-weight: bold; color: #0056b3;" required />
+                            <input type="text" id="primaryKey" placeholder="Auto-fetches after table selection..." readonly class="input-readonly" required />
                         </div>
                     </div>
 
                     <div class="status-msg" id="step2Status"></div>
-                    <div style="display: flex; gap: 15px; margin-top: 25px;">
-                        <button type="button" id="backToStep1Btn" class="btn-secondary" style="flex: 1; padding: 12px;">← Back</button>
-                        <button type="submit" id="step2ProceedBtn" class="btn-primary" style="flex: 2; padding: 12px; background: #fd7e14;">Proceed →</button>
+                    <div class="form-actions">
+                        <button type="button" id="backToStep1Btn" class="btn-secondary btn-flex-1">← Back</button>
+                        <button type="submit" id="step2ProceedBtn" class="btn-primary btn-kafka btn-flex-1">Proceed →</button>
                     </div>
                 </form>
             </div>
 
-            <div id="step3" style="display: none;">
-                <div style="background: #e6f0fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #b8daff;">
-                    <span style="font-weight: bold; color: #004085;">Mapping rules for fields: </span> 
-                    <span id="displayTableName" style="color: #0056b3; font-weight: bold;"></span>
+            <div id="step3" class="d-none">
+                <div class="mapping-rules-container">
+                    <span class="text-bold text-primary">Mapping rules for fields: </span> 
+                    <span id="displayTableName" class="text-primary text-bold"></span>
                 </div>
 
                 <div id="dynamicColumnsContainer"></div>
                 
                 <div class="status-msg" id="step3Status"></div>
-                <div style="display: flex; gap: 15px; margin-top: 25px;">
-                    <button type="button" id="backToStep2Btn" class="btn-secondary" style="flex: 1; padding: 12px;">← Back</button>
-                    <button type="button" id="saveFinalBtn" class="btn-success" style="display: block; flex: 2; padding: 12px;">💾 Save Kafka Pipeline</button>
+                <div class="form-actions">
+                    <button type="button" id="backToStep2Btn" class="btn-secondary btn-flex-1">← Back</button>
+                    <button type="button" id="saveFinalBtn" class="btn-success d-block btn-flex-2">💾 Save Kafka Pipeline</button>
                 </div>
             </div>
         </div>
 
         <div id="directoryModal" class="modal-overlay">
-            <div class="source-modal-box" style="text-align: center;">
-                <div style="font-size: 40px; margin-bottom: 15px;">🔐</div>
-                <h3 style="color: #fd7e14; margin-bottom: 10px;">Security Action Required</h3>
-                <p style="color: #6c757d; font-size: 16px; margin-bottom: 25px;">
+            <div class="source-modal-box text-center">
+                <div class="emoji-large">🔐</div>
+                <h3 class="text-orange mb-10">Security Action Required</h3>
+                <p class="font-16 mb-25" style="color: #6c757d;">
                     Please ensure the enterprise Data Engineering Service Account has been granted <strong>READ</strong> access to the Kafka topic: <br><br>
-                    <strong id="displayTopic" style="background: #f8f9fa; padding: 8px 12px; border: 1px dashed #ccc; border-radius: 4px; color: #2b2b2b;"></strong>
+                    <strong id="displayTopic" class="security-box-text"></strong>
                 </p>
-                <button id="confirmDirectoryBtn" class="btn-primary" style="width: 100%; background: #fd7e14;">I Understand, Proceed</button>
+                <button id="confirmDirectoryBtn" class="btn-primary btn-kafka w-100">I Understand, Proceed</button>
             </div>
         </div>
     </div>

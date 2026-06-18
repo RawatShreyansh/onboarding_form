@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             fieldsArray.forEach(fieldName => {
                 let checkboxesHTML = availableDqChecks.map(check => `
-                    <label class="checkbox-label">
+                    <label class="checkbox-label" data-dqname="${check.dq_name.toLowerCase()}">
                         <input type="checkbox" value="${check.dq_name}">
                         ${check.dq_name}
                     </label>
