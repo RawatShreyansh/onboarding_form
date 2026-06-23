@@ -16,13 +16,16 @@
         <h2>Manage Existing DQ Rules</h2>
         <p class="subtitle">Search for an existing file to add or update its Data Quality checks.</p>
 
-        <div class="search-box">
-            <input type="text" id="searchFileName" placeholder="Enter Source File Name (e.g., daily_sales.csv)" />
-            <button type="button" id="searchBtn" class="btn-primary">Search Database</button>
+        <div class="ux-card">
+            <h3 class="ux-card-title">Search Pipeline</h3>
+            <div class="search-box" style="margin-bottom: 0;">
+                <input type="text" id="searchFileName" placeholder="Enter Source File Name (e.g., daily_sales.csv)" />
+                <button type="button" id="searchBtn" class="btn-primary">Search Database</button>
+            </div>
+            <div id="statusMessage" class="status-msg"></div>
         </div>
-        <div id="statusMessage" class="status-msg"></div>
 
-        <div id="dqEditorSection" class="editor-section">
+        <div id="dqEditorSection" class="editor-section ux-card mt-20" style="display: none;">
             <h3 class="text-dark mb-20">Update Rules for: <span id="displayTableName" class="text-primary"></span></h3>
 
             <div id="dynamicColumnsContainer">

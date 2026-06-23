@@ -11,5 +11,7 @@ router.post('/api/update-dq', fileController.updateDq);
 router.get('/api/schemas', fileController.getSchemas);
 router.get('/api/tables', fileController.getTables);
 router.get('/api/primary-key', fileController.getPrimaryKey);
+router.get('/api/fetch-headers', fileController.fetchHeaders);
+router.get('/api/list-directory', fileController.listDirectory);
 
 module.exports = router;

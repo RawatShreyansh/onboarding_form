@@ -1,4 +1,8 @@
 const FileModel = require('../models/fileModel');
+const fs = require('fs');
+const readline = require('readline');
+const path = require('path');
+const os = require('os');
 
 exports.testDbConnection = async (req, res) => {
     try {
@@ -106,5 +110,93 @@ exports.getPrimaryKey = async (req, res) => {
     } catch (err) {
         console.error("Error fetching primary key:", err.message);
         res.status(500).json({ error: "Server Error" });
+    }
+};
+
+exports.fetchHeaders = async (req, res) => {
+    try {
+        const { directory, fileName, extension } = req.query;
+        if (!directory || !fileName || !extension) {
+            return res.status(400).json({ error: "Missing required parameters: directory, fileName, or extension" });
+        }
+        
+        const fullPath = path.join(directory, fileName + extension);
+        
+        if (!fs.existsSync(fullPath)) {
+            return res.status(404).json({ error: `File not found at: ${fullPath}` });
+        }
+        
+        const fileStream = fs.createReadStream(fullPath);
+        const rl = readline.createInterface({
+            input: fileStream,
+            crlfDelay: Infinity
+        });
+        
+        let firstLine = null;
+        for await (const line of rl) {
+            firstLine = line;
+            break; // Stop reading after first line
+        }
+        
+        rl.close();
+        fileStream.destroy();
+        
+        if (!firstLine) {
+            return res.status(400).json({ error: "File is empty" });
+        }
+        
+        // Since we only support CSV with comma delimiter for now
+        const columns = firstLine.split(',').map(col => col.trim()).filter(col => col.length > 0);
+        
+        if (columns.length === 0) {
+            return res.status(400).json({ error: "No valid columns found in the header" });
+        }
+        
+        res.json({ columns });
+    } catch (err) {
+        console.error("Error fetching headers:", err.message);
+        res.status(500).json({ error: "Failed to read file headers" });
+    }
+};
+
+exports.listDirectory = async (req, res) => {
+    try {
+        let dirPath = req.query.path || os.homedir();
+        
+        if (!fs.existsSync(dirPath)) {
+            return res.status(404).json({ error: "Directory not found" });
+        }
+
+        const stat = fs.statSync(dirPath);
+        if (!stat.isDirectory()) {
+            return res.status(400).json({ error: "Path is not a directory" });
+        }
+
+        const items = fs.readdirSync(dirPath, { withFileTypes: true });
+        
+        const folders = [];
+        const files = [];
+
+        items.forEach(item => {
+            try {
+                if (item.isDirectory()) {
+                    folders.push({ name: item.name, isDirectory: true });
+                } else if (item.isFile()) {
+                    files.push({ name: item.name, isDirectory: false });
+                }
+            } catch (e) {
+                // Ignore items that can't be accessed
+            }
+        });
+
+        res.json({
+            currentPath: dirPath,
+            folders: folders.sort((a, b) => a.name.localeCompare(b.name)),
+            files: files.sort((a, b) => a.name.localeCompare(b.name))
+        });
+
+    } catch (err) {
+        console.error("Error listing directory:", err.message);
+        res.status(500).json({ error: "Failed to list directory contents" });
     }
 };

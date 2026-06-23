@@ -33,45 +33,66 @@
 
         <div id="step1">
             <form id="step1Form">
-                <div class="input-grid">
-                    <div class="input-group">
-                        <label>Source System Name</label>
-                        <input type="text" id="sourceSystem" placeholder="e.g., WORKDAY_HR" pattern="^[A-Za-z0-9_]+$"
-                            title="Only letters, numbers, and underscores allowed." required />
-                    </div>
+                <div class="ux-card">
+                    <h3 class="ux-card-title">Source Identity</h3>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label>Source System Name</label>
+                            <input type="text" id="sourceSystem" placeholder="e.g., WORKDAY_HR" pattern="^[A-Za-z0-9_]+$"
+                                title="Only letters, numbers, and underscores allowed." required />
+                        </div>
 
-                    <div class="input-group">
-                        <label>Source File Name</label>
-                        <input type="text" id="sourceFile" placeholder="e.g., employee_data" pattern="^[A-Za-z0-9_-]+$"
-                            title="No file extensions." required />
-                    </div>
+                        <div class="input-group">
+                            <label>Source File Name</label>
+                            <input type="text" id="sourceFile" placeholder="e.g., employee_data" pattern="^[A-Za-z0-9_-]+$"
+                                title="No file extensions." required />
+                        </div>
 
-                    <div class="input-group">
-                        <label>Source File Extension</label>
-                        <select id="sourceExtension" required class="w-100">
-                            <option value="" disabled selected>Select extension...</option>
-                            <option value=".csv">.csv (Comma Separated)</option>
-                            <!-- <option value=".json">.json (JSON Format)</option>
-                            <option value=".parquet">.parquet (Apache Parquet)</option>
-                            <option value=".txt">.txt (Plain Text)</option>
-                            <option value=".xlsx">.xlsx (Excel Spreadsheet)</option> -->
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                    </div>
-
-                    <div class="input-group input-span-2">
-                        <label>Source File Fields (Comma Separated)</label>
-                        <input type="text" id="sourceFields" placeholder="e.g., employee_id, first_name, last_name"
-                            required />
-                        <small id="fieldsError" class="error-text">
-                            Invalid format! Use only letters, numbers, and underscores separated by commas.
-                        </small>
+                        <div class="input-group">
+                            <label>Source File Extension</label>
+                            <select id="sourceExtension" required class="w-100">
+                                <option value="" disabled selected>Select extension...</option>
+                                <option value=".csv">.csv (Comma Separated)</option>
+                                <!-- <option value=".json">.json (JSON Format)</option>
+                                <option value=".parquet">.parquet (Apache Parquet)</option>
+                                <option value=".txt">.txt (Plain Text)</option>
+                                <option value=".xlsx">.xlsx (Excel Spreadsheet)</option> -->
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div class="checkbox-container">
+                <div class="ux-card mt-20">
+                    <h3 class="ux-card-title">File Location & Parsing</h3>
+                    <div class="input-grid">
+                        <div class="input-group input-span-2">
+                            <label>Source File Landing Directory</label>
+                            <div class="input-with-button">
+                                <input type="text" id="sourceLandingDir" placeholder="e.g., C:\data\landing\hr" required />
+                                <button type="button" id="browseDirBtn" class="btn-browse" title="Browse Local Files">
+                                    <span class="icon">📁</span> Browse
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="input-group input-span-2" style="margin-top: 10px;">
+                            <label class="checkbox-label-styled">
+                                <input type="checkbox" id="fileHasHeader" style="width: 20px; height: 20px; cursor: pointer;" checked>
+                                File contains header row
+                            </label>
+                        </div>
+
+                        <div class="input-group input-span-2" id="sourceFieldsContainer" style="display: none;">
+                            <label>Source File Fields (Comma Separated)</label>
+                            <input type="text" id="sourceFields" placeholder="e.g., employee_id, first_name, last_name" />
+                            <small id="fieldsError" class="error-text" style="display: none;">
+                                Invalid format! Use only letters, numbers, and underscores separated by commas.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ux-card mt-20 checkbox-container">
                     <label class="checkbox-label-styled">
                         <input type="checkbox" id="dqEnable" style="width: 20px; height: 20px; cursor: pointer;"
                             checked>
@@ -86,23 +107,26 @@
 
         <div id="step2" class="d-none">
             <form id="step2Form">
-                <div class="input-grid">
-                    <div class="input-group">
-                        <label>Target Table Schema</label>
-                        <select id="targetSchema" required class="w-100">
-                            <option value="" disabled selected>Loading schemas...</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Target Table Name</label>
-                        <select id="targetTable" required disabled class="w-100">
-                            <option value="" disabled selected>Select a schema first...</option>
-                        </select>
-                    </div>
-                    <div class="input-group input-span-2">
-                        <label>Primary Key Column(s)</label>
-                        <input type="text" id="primaryKey" placeholder="Auto-fetches after table selection..." readonly
-                            class="input-readonly" required />
+                <div class="ux-card">
+                    <h3 class="ux-card-title">Target Configuration</h3>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label>Target Table Schema</label>
+                            <select id="targetSchema" required class="w-100">
+                                <option value="" disabled selected>Loading schemas...</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Target Table Name</label>
+                            <select id="targetTable" required disabled class="w-100">
+                                <option value="" disabled selected>Select a schema first...</option>
+                            </select>
+                        </div>
+                        <div class="input-group input-span-2">
+                            <label>Primary Key Column(s)</label>
+                            <input type="text" id="primaryKey" placeholder="Auto-fetches after table selection..." readonly
+                                class="input-readonly" required />
+                        </div>
                     </div>
                 </div>
 
@@ -131,17 +155,26 @@
         </div>
     </div>
 
-    <div id="directoryModal" class="modal-overlay">
-        <div class="source-modal-box text-center">
-            <div class="emoji-large">📂</div>
-            <h3 class="text-primary mb-10">Action Required</h3>
-            <p class="font-16 mb-25" style="color: #6c757d;">
-                Please ensure you place your source files in the following secure landing directory: <br><br>
-                <strong id="displayDirectory" class="security-box-text"></strong>
-            </p>
-            <button id="confirmDirectoryBtn" class="btn-primary w-100">I Understand, Proceed</button>
+
+    <!-- File Browser Modal -->
+    <div id="fileBrowserModal" class="modal-overlay">
+        <div class="file-browser-box">
+            <div class="modal-header">
+                <h3>Select File or Directory</h3>
+                <button type="button" id="closeFileBrowserBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="file-browser-path">
+                <span id="currentBrowserPath" class="path-text">Loading...</span>
+            </div>
+            <div class="file-browser-list" id="fileBrowserList">
+                <!-- Dynamically populated folders and files -->
+            </div>
+            <div class="form-actions mt-20" style="justify-content: flex-end;">
+                <button type="button" id="selectCurrentFolderBtn" class="btn-secondary">Select Current Folder</button>
+            </div>
         </div>
     </div>
+
     <script src="../scripts/onboarding.js"></script>
 </body>
 

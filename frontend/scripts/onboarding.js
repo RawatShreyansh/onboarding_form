@@ -22,8 +22,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const targetTableSelect = document.getElementById('targetTable');
     const primaryKeyInput = document.getElementById('primaryKey');
 
+    const fileHasHeaderCheckbox = document.getElementById('fileHasHeader');
+    const sourceFieldsContainer = document.getElementById('sourceFieldsContainer');
+    const sourceFieldsInput = document.getElementById('sourceFields');
+
     let availableDqChecks = [];
-    let savedMetadata = {}; 
+    let savedMetadata = {};
+
+    fileHasHeaderCheckbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            sourceFieldsContainer.style.display = 'none';
+            sourceFieldsInput.removeAttribute('required');
+        } else {
+            sourceFieldsContainer.style.display = 'flex';
+            sourceFieldsInput.setAttribute('required', 'required');
+        }
+    });
 
     // ==========================================
     // CASCADING DROPDOWNS (TARGET SCHEMA -> TABLE -> PK)
@@ -107,40 +121,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ==========================================
-    // LOGIC: STEP 1 -> DIRECTORY POPUP -> STEP 2
+    // LOGIC: STEP 1 -> STEP 2
     // ==========================================
     step1Form.addEventListener('submit', (e) => {
         e.preventDefault(); 
 
-        const sourceFieldsInput = document.getElementById('sourceFields');
         const fieldsErrorText = document.getElementById('fieldsError');
-        const isValidCommaList = /^[a-zA-Z0-9_]+(?:\s*,\s*[a-zA-Z0-9_]+)*$/.test(sourceFieldsInput.value.trim());
+        
+        if (!fileHasHeaderCheckbox.checked) {
+            const isValidCommaList = /^[a-zA-Z0-9_]+(?:\s*,\s*[a-zA-Z0-9_]+)*$/.test(sourceFieldsInput.value.trim());
 
-        if (!isValidCommaList) {
-            sourceFieldsInput.classList.add('input-error');
-            fieldsErrorText.style.display = 'block';
-            step1Status.textContent = "Please fix the format of the fields before proceeding.";
-            step1Status.style.color = "#dc3545";
-            return;
-        } else {
-            sourceFieldsInput.classList.remove('input-error');
-            fieldsErrorText.style.display = 'none';
-            step1Status.textContent = "";
+            if (!isValidCommaList) {
+                sourceFieldsInput.classList.add('input-error');
+                fieldsErrorText.style.display = 'block';
+                step1Status.textContent = "Please fix the format of the fields before proceeding.";
+                step1Status.style.color = "#dc3545";
+                return;
+            }
         }
 
-        // Generate the mandatory directory path
-        const sysName = document.getElementById('sourceSystem').value.trim().toLowerCase();
-        const generatedDir = `/data/landing/${sysName}`;
-        
-        // Show Modal
-        document.getElementById('displayDirectory').textContent = generatedDir;
-        document.getElementById('directoryModal').classList.add('show');
-        
-        savedMetadata.temp_source_dir = generatedDir;
-    });
+        sourceFieldsInput.classList.remove('input-error');
+        fieldsErrorText.style.display = 'none';
+        step1Status.textContent = "";
 
-    document.getElementById('confirmDirectoryBtn').addEventListener('click', () => {
-        document.getElementById('directoryModal').classList.remove('show');
+        savedMetadata.temp_source_dir = document.getElementById('sourceLandingDir').value.trim();
         
         step1.style.display = 'none';
         step2.style.display = 'block';
@@ -169,12 +173,31 @@ document.addEventListener('DOMContentLoaded', () => {
             target_table_schema: document.getElementById('targetSchema').value,
             target_table_name: document.getElementById('targetTable').value,
             primary_key_column: document.getElementById('primaryKey').value.trim(),
-            dq_enable_flag: document.getElementById('dqEnable').checked
+            dq_enable_flag: document.getElementById('dqEnable').checked,
+            file_has_header: document.getElementById('fileHasHeader').checked
         };
 
         if (savedMetadata.dq_enable_flag) {
-            step2Status.textContent = "Generating Data Quality mapping...";
+            step2Status.textContent = "Processing...";
             step2Status.style.color = "#0056b3";
+            
+            if (savedMetadata.file_has_header) {
+                try {
+                    const response = await fetch(`/api/fetch-headers?directory=${encodeURIComponent(savedMetadata.source_file_dir)}&fileName=${encodeURIComponent(rawFileName)}&extension=${encodeURIComponent(selectedExtension)}`);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || "Failed to fetch headers");
+                    }
+                    const data = await response.json();
+                    savedMetadata.source_fields = data.columns.join(',');
+                } catch (err) {
+                    step2Status.textContent = err.message;
+                    step2Status.style.color = "#dc3545";
+                    return;
+                }
+            }
+
+            step2Status.textContent = "Generating Data Quality mapping...";
             
             indicatorStep2.classList.remove('active');
             indicatorStep2.classList.add('completed');
@@ -213,22 +236,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // LOGIC: SMART BACK BUTTON (TOP LEFT)
     // ==========================================
-    document.getElementById('smartBackBtn').addEventListener('click', (e) => {
-        e.preventDefault(); // Stop the link from jumping the page around
+    const smartBackBtn = document.getElementById('smartBackBtn');
+    if (smartBackBtn) {
+        smartBackBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Stop the link from jumping the page around
 
-        // If Step 3 is currently visible, trigger the Step 3 -> Step 2 back button
-        if (step3.style.display === 'block') {
-            document.getElementById('backToStep2Btn').click();
-        } 
-        // If Step 2 is currently visible, trigger the Step 2 -> Step 1 back button
-        else if (step2.style.display === 'block') {
-            document.getElementById('backToStep1Btn').click();
-        } 
-        // If we are already on Step 1, go back to the main portal menu!
-        else {
-            window.location.href = '../index.html'; // Change to 'source-select.html' if you prefer!
-        }
-    });
+            // If Step 3 is currently visible, trigger the Step 3 -> Step 2 back button
+            if (step3.style.display === 'block') {
+                document.getElementById('backToStep2Btn').click();
+            } 
+            // If Step 2 is currently visible, trigger the Step 2 -> Step 1 back button
+            else if (step2.style.display === 'block') {
+                document.getElementById('backToStep1Btn').click();
+            } 
+            // If we are already on Step 1, go back to the main portal menu!
+            else {
+                window.location.href = '../index.html'; // Change to 'source-select.html' if you prefer!
+            }
+        });
+    }
 
     // ==========================================
     // LOGIC: BUILD STEP 3 ACCORDION
@@ -348,4 +374,109 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!metadata.dq_enable_flag) document.getElementById('step2ProceedBtn').disabled = false;
         }
     }
+
+    // ==========================================
+    // LOGIC: CUSTOM FILE BROWSER MODAL
+    // ==========================================
+    const browseDirBtn = document.getElementById('browseDirBtn');
+    const fileBrowserModal = document.getElementById('fileBrowserModal');
+    const closeFileBrowserBtn = document.getElementById('closeFileBrowserBtn');
+    const fileBrowserList = document.getElementById('fileBrowserList');
+    const currentBrowserPath = document.getElementById('currentBrowserPath');
+    const selectCurrentFolderBtn = document.getElementById('selectCurrentFolderBtn');
+    const sourceLandingDirInput = document.getElementById('sourceLandingDir');
+    const sourceFileInput = document.getElementById('sourceFile');
+    const sourceExtensionSelect = document.getElementById('sourceExtension');
+
+    let currentLoadedPath = '';
+
+    async function loadDirectory(path = '') {
+        fileBrowserList.innerHTML = '<div style="padding: 20px; text-align: center;">Loading...</div>';
+        try {
+            const url = path ? `/api/list-directory?path=${encodeURIComponent(path)}` : '/api/list-directory';
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Failed to load directory");
+            
+            const data = await response.json();
+            currentLoadedPath = data.currentPath;
+            currentBrowserPath.textContent = currentLoadedPath;
+            
+            fileBrowserList.innerHTML = '';
+
+            // Parent directory ".." button
+            const parentItem = document.createElement('div');
+            parentItem.className = 'browser-item folder-item';
+            parentItem.innerHTML = `<span class="browser-icon">🔙</span> .. (Go Up)`;
+            parentItem.addEventListener('click', () => {
+                // simple parent path calculation (handles both \ and /)
+                const parts = currentLoadedPath.split(/[/\\]/).filter(p => p);
+                if (parts.length > 1) {
+                    parts.pop();
+                    const newPath = currentLoadedPath.includes('\\') ? parts.join('\\') + '\\' : '/' + parts.join('/');
+                    loadDirectory(newPath);
+                } else if (parts.length === 1 && currentLoadedPath.includes('\\')) {
+                    // Windows root (e.g., C:\)
+                    loadDirectory(parts[0] + '\\');
+                }
+            });
+            fileBrowserList.appendChild(parentItem);
+
+            // Folders
+            data.folders.forEach(folder => {
+                const item = document.createElement('div');
+                item.className = 'browser-item folder-item';
+                item.innerHTML = `<span class="browser-icon">📁</span> ${folder.name}`;
+                item.addEventListener('click', () => {
+                    const separator = currentLoadedPath.endsWith('\\') || currentLoadedPath.endsWith('/') ? '' : (currentLoadedPath.includes('\\') ? '\\' : '/');
+                    loadDirectory(currentLoadedPath + separator + folder.name);
+                });
+                fileBrowserList.appendChild(item);
+            });
+
+            // Files
+            data.files.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'browser-item file-item';
+                item.innerHTML = `<span class="browser-icon">📄</span> ${file.name}`;
+                item.addEventListener('click', () => {
+                    // Split extension
+                    const lastDot = file.name.lastIndexOf('.');
+                    if (lastDot > 0) {
+                        const name = file.name.substring(0, lastDot);
+                        const ext = file.name.substring(lastDot);
+                        sourceFileInput.value = name;
+                        
+                        // Try to select extension
+                        const extOption = Array.from(sourceExtensionSelect.options).find(opt => opt.value === ext);
+                        if (extOption) sourceExtensionSelect.value = ext;
+                    } else {
+                        sourceFileInput.value = file.name;
+                    }
+                    
+                    sourceLandingDirInput.value = currentLoadedPath;
+                    fileBrowserModal.classList.remove('show');
+                });
+                fileBrowserList.appendChild(item);
+            });
+            
+        } catch (error) {
+            console.error(error);
+            fileBrowserList.innerHTML = `<div style="padding: 20px; color: red;">Error: ${error.message}</div>`;
+        }
+    }
+
+    browseDirBtn.addEventListener('click', () => {
+        fileBrowserModal.classList.add('show');
+        loadDirectory(sourceLandingDirInput.value.trim() || '');
+    });
+
+    closeFileBrowserBtn.addEventListener('click', () => {
+        fileBrowserModal.classList.remove('show');
+    });
+
+    selectCurrentFolderBtn.addEventListener('click', () => {
+        sourceLandingDirInput.value = currentLoadedPath;
+        fileBrowserModal.classList.remove('show');
+    });
+
 });

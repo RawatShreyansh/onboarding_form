@@ -16,14 +16,17 @@
         <h2 class="text-orange">Manage Kafka DQ Rules</h2>
         <p class="subtitle">Search for an existing Kafka topic to add or update its Data Quality checks.</p>
 
-        <div class="search-box">
-            <input type="text" id="searchTopicName"
-                placeholder="Enter Kafka Topic Name (e.g., live.transactions.events)" />
-            <button type="button" id="searchBtn" class="btn-primary btn-kafka">Search Database</button>
+        <div class="ux-card">
+            <h3 class="ux-card-title">Search Topic</h3>
+            <div class="search-box" style="margin-bottom: 0;">
+                <input type="text" id="searchTopicName"
+                    placeholder="Enter Kafka Topic Name (e.g., live.transactions.events)" />
+                <button type="button" id="searchBtn" class="btn-primary btn-kafka">Search Database</button>
+            </div>
+            <div id="statusMessage" class="status-msg"></div>
         </div>
-        <div id="statusMessage" class="status-msg"></div>
 
-        <div id="dqEditorSection" class="editor-section">
+        <div id="dqEditorSection" class="editor-section ux-card mt-20" style="display: none;">
             <h3 class="text-dark mb-20">Update Rules for: <span id="displayTableName" class="text-orange"></span></h3>
 
             <div id="dynamicColumnsContainer">

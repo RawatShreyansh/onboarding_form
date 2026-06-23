@@ -34,37 +34,40 @@
 
             <div id="step1">
                 <form id="step1Form">
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label>Source System Name</label>
-                            <input type="text" id="sourceSystem" placeholder="e.g., PAYMENT_GATEWAY" pattern="^[A-Za-z0-9_]+$" required />
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Kafka Topic Name</label>
-                            <input type="text" id="topicName" placeholder="e.g., live.transactions.events" required />
-                        </div>
-                        
-                        <div class="input-group">
-                            <label>Message Payload Format</label>
-                            <select id="messageFormat" required class="w-100">
-                                <option value="" disabled selected>Select format...</option>
-                                <option value="JSON">JSON</option>
-                                <option value="AVRO">Avro</option>
-                                <option value="CSV">CSV</option>
-                            </select>
-                        </div>
+                    <div class="ux-card">
+                        <h3 class="ux-card-title">Topic Identity</h3>
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label>Source System Name</label>
+                                <input type="text" id="sourceSystem" placeholder="e.g., PAYMENT_GATEWAY" pattern="^[A-Za-z0-9_]+$" required />
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Kafka Topic Name</label>
+                                <input type="text" id="topicName" placeholder="e.g., live.transactions.events" required />
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Message Payload Format</label>
+                                <select id="messageFormat" required class="w-100">
+                                    <option value="" disabled selected>Select format...</option>
+                                    <option value="JSON">JSON</option>
+                                    <option value="AVRO">Avro</option>
+                                    <option value="CSV">CSV</option>
+                                </select>
+                            </div>
 
-                        <div class="input-group input-span-2">
-                            <label>Message Fields / JSON Keys (Comma Separated)</label>
-                            <input type="text" id="sourceFields" placeholder="e.g., transaction_id, user_id, amount" required />
-                            <small id="fieldsError" class="error-text">
-                                Invalid format! Use only letters, numbers, and underscores separated by commas.
-                            </small>
+                            <div class="input-group input-span-2">
+                                <label>Message Fields / JSON Keys (Comma Separated)</label>
+                                <input type="text" id="sourceFields" placeholder="e.g., transaction_id, user_id, amount" required />
+                                <small id="fieldsError" class="error-text">
+                                    Invalid format! Use only letters, numbers, and underscores separated by commas.
+                                </small>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="kafka-checkbox-container">
+                    <div class="ux-card mt-20 kafka-checkbox-container">
                         <label class="kafka-checkbox-label-styled">
                             <input type="checkbox" id="dqEnable" style="width: 20px; height: 20px; cursor: pointer;" checked>
                             Enable Data Quality Checks for this topic
@@ -78,22 +81,25 @@
 
             <div id="step2" class="d-none">
                 <form id="step2Form">
-                    <div class="input-grid">
-                        <div class="input-group">
-                            <label>Target Table Schema</label>
-                            <select id="targetSchema" required class="w-100">
-                                <option value="" disabled selected>Loading schemas...</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Target Table Name</label>
-                            <select id="targetTable" required disabled class="w-100">
-                                <option value="" disabled selected>Select a schema first...</option>
-                            </select>
-                        </div>
-                        <div class="input-group input-span-2">
-                            <label>Primary Key Column(s)</label>
-                            <input type="text" id="primaryKey" placeholder="Auto-fetches after table selection..." readonly class="input-readonly" required />
+                    <div class="ux-card">
+                        <h3 class="ux-card-title">Target Configuration</h3>
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label>Target Table Schema</label>
+                                <select id="targetSchema" required class="w-100">
+                                    <option value="" disabled selected>Loading schemas...</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Target Table Name</label>
+                                <select id="targetTable" required disabled class="w-100">
+                                    <option value="" disabled selected>Select a schema first...</option>
+                                </select>
+                            </div>
+                            <div class="input-group input-span-2">
+                                <label>Primary Key Column(s)</label>
+                                <input type="text" id="primaryKey" placeholder="Auto-fetches after table selection..." readonly class="input-readonly" required />
+                            </div>
                         </div>
                     </div>
 
