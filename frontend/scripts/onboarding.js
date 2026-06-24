@@ -6,17 +6,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const step1 = document.getElementById('step1');
     const step2 = document.getElementById('step2');
     const step3 = document.getElementById('step3');
+    const step4 = document.getElementById('step4');
     
     const step1Form = document.getElementById('step1Form');
     const step2Form = document.getElementById('step2Form');
+    const step3Form = document.getElementById('step3Form');
     
     const indicatorStep1 = document.getElementById('indicator-step1');
     const indicatorStep2 = document.getElementById('indicator-step2');
     const indicatorStep3 = document.getElementById('indicator-step3');
+    const indicatorStep4 = document.getElementById('indicator-step4');
     
     const step1Status = document.getElementById('step1Status');
     const step2Status = document.getElementById('step2Status');
     const step3Status = document.getElementById('step3Status');
+    const step4Status = document.getElementById('step4Status');
 
     const targetSchemaSelect = document.getElementById('targetSchema');
     const targetTableSelect = document.getElementById('targetTable');
@@ -121,9 +125,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ==========================================
+    // LOGIC: TEST CONNECTION
+    // ==========================================
+    document.getElementById('testConnectionBtn').addEventListener('click', async () => {
+        const ip = document.getElementById('serverIp').value.trim();
+        const user = document.getElementById('serverUsername').value.trim();
+        const pass = document.getElementById('serverPassword').value;
+        if (!ip || !user || !pass) {
+            step1Status.textContent = "Please enter Server IP, Username, and Password first.";
+            step1Status.style.color = "#dc3545";
+            return;
+        }
+        
+        const originalText = document.getElementById('testConnectionBtn').textContent;
+        document.getElementById('testConnectionBtn').textContent = "Testing...";
+        document.getElementById('testConnectionBtn').disabled = true;
+        step1Status.textContent = "Attempting to reach server via SFTP...";
+        step1Status.style.color = "#0056b3";
+
+        try {
+            const response = await fetch('/api/test-sftp-connection', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip, username: user, password: pass })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Connection failed");
+            }
+
+            step1Status.textContent = "Connection Successful! Server is reachable.";
+            step1Status.style.color = "#10b981";
+        } catch (err) {
+            step1Status.textContent = err.message;
+            step1Status.style.color = "#dc3545";
+        } finally {
+            document.getElementById('testConnectionBtn').textContent = originalText;
+            document.getElementById('testConnectionBtn').disabled = false;
+        }
+    });
+
+    // ==========================================
     // LOGIC: STEP 1 -> STEP 2
     // ==========================================
     step1Form.addEventListener('submit', (e) => {
+        e.preventDefault(); 
+        
+        savedMetadata.server_ip = document.getElementById('serverIp').value.trim();
+        savedMetadata.server_username = document.getElementById('serverUsername').value.trim();
+        savedMetadata.server_password = document.getElementById('serverPassword').value;
+
+        step1Status.textContent = "";
+        step1.style.display = 'none';
+        step2.style.display = 'block';
+        
+        indicatorStep1.classList.remove('active');
+        indicatorStep1.classList.add('completed');
+        indicatorStep2.classList.add('active');
+    });
+
+    // ==========================================
+    // LOGIC: STEP 2 -> STEP 3
+    // ==========================================
+    step2Form.addEventListener('submit', (e) => {
         e.preventDefault(); 
 
         const fieldsErrorText = document.getElementById('fieldsError');
@@ -134,38 +199,39 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isValidCommaList) {
                 sourceFieldsInput.classList.add('input-error');
                 fieldsErrorText.style.display = 'block';
-                step1Status.textContent = "Please fix the format of the fields before proceeding.";
-                step1Status.style.color = "#dc3545";
+                step2Status.textContent = "Please fix the format of the fields before proceeding.";
+                step2Status.style.color = "#dc3545";
                 return;
             }
         }
 
         sourceFieldsInput.classList.remove('input-error');
         fieldsErrorText.style.display = 'none';
-        step1Status.textContent = "";
+        step2Status.textContent = "";
 
         savedMetadata.temp_source_dir = document.getElementById('sourceLandingDir').value.trim();
         
-        step1.style.display = 'none';
-        step2.style.display = 'block';
+        step2.style.display = 'none';
+        step3.style.display = 'block';
         
-        indicatorStep1.classList.remove('active');
-        indicatorStep1.classList.add('completed');
-        indicatorStep2.classList.add('active');
+        indicatorStep2.classList.remove('active');
+        indicatorStep2.classList.add('completed');
+        indicatorStep3.classList.add('active');
     });
 
     // ==========================================
-    // LOGIC: STEP 2 -> STEP 3 (OR SAVE DIRECTLY)
+    // LOGIC: STEP 3 -> STEP 4 (OR SAVE DIRECTLY)
     // ==========================================
-    step2Form.addEventListener('submit', async (e) => {
+    step3Form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         let rawFileName = document.getElementById('sourceFile').value.trim();
         rawFileName = rawFileName.replace(/\.[^/.]+$/, ""); 
         const selectedExtension = document.getElementById('sourceExtension').value;
 
-        // Gather all inputs from Step 1 and Step 2
+        // Gather all inputs
         savedMetadata = {
+            ...savedMetadata,
             source_system_name: document.getElementById('sourceSystem').value.trim(),
             source_file_dir: savedMetadata.temp_source_dir,
             source_file_name: rawFileName + selectedExtension,
@@ -178,12 +244,23 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (savedMetadata.dq_enable_flag) {
-            step2Status.textContent = "Processing...";
-            step2Status.style.color = "#0056b3";
+            step3Status.textContent = "Processing...";
+            step3Status.style.color = "#0056b3";
             
             if (savedMetadata.file_has_header) {
                 try {
-                    const response = await fetch(`/api/fetch-headers?directory=${encodeURIComponent(savedMetadata.source_file_dir)}&fileName=${encodeURIComponent(rawFileName)}&extension=${encodeURIComponent(selectedExtension)}`);
+                    const response = await fetch('/api/fetch-sftp-headers', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ip: savedMetadata.server_ip,
+                            username: savedMetadata.server_username,
+                            password: savedMetadata.server_password,
+                            directory: savedMetadata.source_file_dir,
+                            fileName: rawFileName,
+                            extension: selectedExtension
+                        })
+                    });
                     if (!response.ok) {
                         const errorData = await response.json();
                         throw new Error(errorData.error || "Failed to fetch headers");
@@ -191,23 +268,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await response.json();
                     savedMetadata.source_fields = data.columns.join(',');
                 } catch (err) {
-                    step2Status.textContent = err.message;
-                    step2Status.style.color = "#dc3545";
+                    step3Status.textContent = err.message;
+                    step3Status.style.color = "#dc3545";
                     return;
                 }
             }
 
-            step2Status.textContent = "Generating Data Quality mapping...";
+            step3Status.textContent = "Generating Data Quality mapping...";
             
-            indicatorStep2.classList.remove('active');
-            indicatorStep2.classList.add('completed');
-            indicatorStep3.classList.add('active');
+            indicatorStep3.classList.remove('active');
+            indicatorStep3.classList.add('completed');
+            indicatorStep4.classList.add('active');
             
-            await buildStep3WithSourceFields(savedMetadata.source_fields);
+            await buildStep4WithSourceFields(savedMetadata.source_fields);
         } else {
-            document.getElementById('step2ProceedBtn').disabled = true;
-            step2Status.textContent = "Saving pipeline directly to database...";
-            step2Status.style.color = "#0056b3";
+            document.getElementById('step3ProceedBtn').disabled = true;
+            step3Status.textContent = "Saving pipeline directly to database...";
+            step3Status.style.color = "#0056b3";
             await sendFinalPayload(savedMetadata, {}); 
         }
     });
@@ -233,33 +310,39 @@ document.addEventListener('DOMContentLoaded', () => {
         indicatorStep2.classList.add('active');
     });
 
+    document.getElementById('backToStep3Btn').addEventListener('click', () => {
+        step4.style.display = 'none';
+        step3.style.display = 'block';
+        step4Status.textContent = "";
+        indicatorStep4.classList.remove('active');
+        indicatorStep3.classList.remove('completed');
+        indicatorStep3.classList.add('active');
+    });
+
     // ==========================================
     // LOGIC: SMART BACK BUTTON (TOP LEFT)
     // ==========================================
     const smartBackBtn = document.getElementById('smartBackBtn');
     if (smartBackBtn) {
         smartBackBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Stop the link from jumping the page around
+            e.preventDefault(); 
 
-            // If Step 3 is currently visible, trigger the Step 3 -> Step 2 back button
-            if (step3.style.display === 'block') {
+            if (step4.style.display === 'block') {
+                document.getElementById('backToStep3Btn').click();
+            } else if (step3.style.display === 'block') {
                 document.getElementById('backToStep2Btn').click();
-            } 
-            // If Step 2 is currently visible, trigger the Step 2 -> Step 1 back button
-            else if (step2.style.display === 'block') {
+            } else if (step2.style.display === 'block') {
                 document.getElementById('backToStep1Btn').click();
-            } 
-            // If we are already on Step 1, go back to the main portal menu!
-            else {
-                window.location.href = '../index.html'; // Change to 'source-select.html' if you prefer!
+            } else {
+                window.location.href = '../index.html'; 
             }
         });
     }
 
     // ==========================================
-    // LOGIC: BUILD STEP 3 ACCORDION
+    // LOGIC: BUILD STEP 4 ACCORDION
     // ==========================================
-    async function buildStep3WithSourceFields(commaSeparatedFields) {
+    async function buildStep4WithSourceFields(commaSeparatedFields) {
         try {
             const response = await fetch('/api/dq-checks');
             availableDqChecks = await response.json();
@@ -301,19 +384,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             document.getElementById('displayTableName').textContent = "Parsed from input";
-            step2.style.display = 'none';
-            step3.style.display = 'block';
-            step2Status.textContent = "";
+            step3.style.display = 'none';
+            step4.style.display = 'block';
+            step3Status.textContent = "";
 
         } catch (error) {
             console.error("Error:", error);
-            step2Status.textContent = "Error loading DQ rules from server.";
-            step2Status.style.color = "#dc3545";
+            step3Status.textContent = "Error loading DQ rules from server.";
+            step3Status.style.color = "#dc3545";
         }
     }
 
     // ==========================================
-    // LOGIC: FINAL SAVE FROM STEP 3
+    // LOGIC: FINAL SAVE FROM STEP 4
     // ==========================================
     document.getElementById('saveFinalBtn').addEventListener('click', async () => {
         const columnRules = {};
@@ -328,13 +411,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (Object.keys(columnRules).length === 0) {
-            step3Status.textContent = "Please select at least one DQ check before saving.";
-            step3Status.style.color = "#dc3545";
+            step4Status.textContent = "Please select at least one DQ check before saving.";
+            step4Status.style.color = "#dc3545";
             return;
         }
 
-        step3Status.textContent = "Saving pipeline configuration...";
-        step3Status.style.color = "#0056b3";
+        step4Status.textContent = "Saving pipeline configuration...";
+        step4Status.style.color = "#0056b3";
         document.getElementById('saveFinalBtn').disabled = true;
 
         await sendFinalPayload(savedMetadata, columnRules);
@@ -357,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.ok) {
-                const targetStatus = metadata.dq_enable_flag ? step3Status : step2Status;
+                const targetStatus = metadata.dq_enable_flag ? step4Status : step3Status;
                 targetStatus.textContent = "Success! Configuration saved to database.";
                 targetStatus.style.color = "#28a745";
                 
@@ -367,11 +450,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error(error);
-            const targetStatus = metadata.dq_enable_flag ? step3Status : step2Status;
+            const targetStatus = metadata.dq_enable_flag ? step4Status : step3Status;
             targetStatus.textContent = "Error saving configuration.";
             targetStatus.style.color = "#dc3545";
             if (metadata.dq_enable_flag) document.getElementById('saveFinalBtn').disabled = false;
-            if (!metadata.dq_enable_flag) document.getElementById('step2ProceedBtn').disabled = false;
+            if (!metadata.dq_enable_flag) document.getElementById('step3ProceedBtn').disabled = false;
         }
     }
 
@@ -390,12 +473,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentLoadedPath = '';
 
-    async function loadDirectory(path = '') {
+    async function loadDirectory(path = '.') {
         fileBrowserList.innerHTML = '<div style="padding: 20px; text-align: center;">Loading...</div>';
         try {
-            const url = path ? `/api/list-directory?path=${encodeURIComponent(path)}` : '/api/list-directory';
-            const response = await fetch(url);
-            if (!response.ok) throw new Error("Failed to load directory");
+            const payload = {
+                ip: savedMetadata.server_ip,
+                username: savedMetadata.server_username,
+                password: savedMetadata.server_password,
+                path: path
+            };
+
+            const response = await fetch('/api/list-sftp-directory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || "Failed to load directory");
+            }
             
             const data = await response.json();
             currentLoadedPath = data.currentPath;
@@ -403,31 +500,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             fileBrowserList.innerHTML = '';
 
-            // Parent directory ".." button
-            const parentItem = document.createElement('div');
-            parentItem.className = 'browser-item folder-item';
-            parentItem.innerHTML = `<span class="browser-icon">🔙</span> .. (Go Up)`;
-            parentItem.addEventListener('click', () => {
-                // simple parent path calculation (handles both \ and /)
-                const parts = currentLoadedPath.split(/[/\\]/).filter(p => p);
-                if (parts.length > 1) {
-                    parts.pop();
-                    const newPath = currentLoadedPath.includes('\\') ? parts.join('\\') + '\\' : '/' + parts.join('/');
-                    loadDirectory(newPath);
-                } else if (parts.length === 1 && currentLoadedPath.includes('\\')) {
-                    // Windows root (e.g., C:\)
-                    loadDirectory(parts[0] + '\\');
-                }
-            });
-            fileBrowserList.appendChild(parentItem);
-
             // Folders
             data.folders.forEach(folder => {
                 const item = document.createElement('div');
                 item.className = 'browser-item folder-item';
                 item.innerHTML = `<span class="browser-icon">📁</span> ${folder.name}`;
                 item.addEventListener('click', () => {
-                    const separator = currentLoadedPath.endsWith('\\') || currentLoadedPath.endsWith('/') ? '' : (currentLoadedPath.includes('\\') ? '\\' : '/');
+                    const separator = currentLoadedPath.endsWith('/') ? '' : '/';
                     loadDirectory(currentLoadedPath + separator + folder.name);
                 });
                 fileBrowserList.appendChild(item);
@@ -467,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     browseDirBtn.addEventListener('click', () => {
         fileBrowserModal.classList.add('show');
-        loadDirectory(sourceLandingDirInput.value.trim() || '');
+        loadDirectory(sourceLandingDirInput.value.trim() || '.');
     });
 
     closeFileBrowserBtn.addEventListener('click', () => {
@@ -478,5 +557,19 @@ document.addEventListener('DOMContentLoaded', () => {
         sourceLandingDirInput.value = currentLoadedPath;
         fileBrowserModal.classList.remove('show');
     });
+
+    const goUpFolderBtn = document.getElementById('goUpFolderBtn');
+    if (goUpFolderBtn) {
+        goUpFolderBtn.addEventListener('click', () => {
+            const parts = currentLoadedPath.split('/').filter(p => p);
+            if (parts.length > 0) {
+                parts.pop();
+                const newPath = '/' + parts.join('/');
+                loadDirectory(newPath || '/');
+            } else {
+                loadDirectory('/');
+            }
+        });
+    }
 
 });

@@ -14,4 +14,8 @@ router.get('/api/primary-key', fileController.getPrimaryKey);
 router.get('/api/fetch-headers', fileController.fetchHeaders);
 router.get('/api/list-directory', fileController.listDirectory);
 
+router.post('/api/test-sftp-connection', fileController.testSftpConnection);
+router.post('/api/list-sftp-directory', fileController.listSftpDirectory);
+router.post('/api/fetch-sftp-headers', fileController.fetchSftpHeaders);
+
 module.exports = router;

@@ -3,6 +3,7 @@ const fs = require('fs');
 const readline = require('readline');
 const path = require('path');
 const os = require('os');
+const Client = require('ssh2-sftp-client');
 
 exports.testDbConnection = async (req, res) => {
     try {
@@ -198,5 +199,130 @@ exports.listDirectory = async (req, res) => {
     } catch (err) {
         console.error("Error listing directory:", err.message);
         res.status(500).json({ error: "Failed to list directory contents" });
+    }
+};
+
+exports.testSftpConnection = async (req, res) => {
+    const sftp = new Client();
+    try {
+        const { ip, username, password } = req.body;
+        if (!ip || !username || !password) {
+            return res.status(400).json({ error: "Missing SFTP credentials" });
+        }
+        
+        await sftp.connect({ host: ip, username: username, password: password, readyTimeout: 10000 });
+        await sftp.end();
+        
+        res.json({ message: "Connection successful" });
+    } catch (err) {
+        console.error("SFTP Connection failed:", err.message);
+        try { await sftp.end(); } catch (e) {}
+        res.status(401).json({ error: "Connection failed: " + err.message });
+    }
+};
+
+exports.listSftpDirectory = async (req, res) => {
+    const sftp = new Client();
+    try {
+        const { ip, username, password, path: dirPath = '.' } = req.body;
+        if (!ip || !username || !password) {
+            return res.status(400).json({ error: "Missing SFTP credentials" });
+        }
+        
+        await sftp.connect({ host: ip, username: username, password: password });
+        
+        let realPath;
+        try {
+            realPath = await sftp.realPath(dirPath); 
+        } catch (e) {
+            realPath = dirPath;
+        }
+
+        const list = await sftp.list(realPath);
+        
+        const folders = [];
+        const files = [];
+
+        list.forEach(item => {
+            // Ignore hidden files and . / ..
+            if (item.name === '.' || item.name === '..') return;
+            if (item.type === 'd') {
+                folders.push({ name: item.name, isDirectory: true });
+            } else if (item.type === '-') {
+                files.push({ name: item.name, isDirectory: false });
+            }
+        });
+
+        await sftp.end();
+
+        res.json({
+            currentPath: realPath,
+            folders: folders.sort((a, b) => a.name.localeCompare(b.name)),
+            files: files.sort((a, b) => a.name.localeCompare(b.name))
+        });
+
+    } catch (err) {
+        console.error("SFTP List Directory failed:", err.message);
+        try { await sftp.end(); } catch (e) {}
+        res.status(500).json({ error: "Failed to list remote directory: " + err.message });
+    }
+};
+
+exports.fetchSftpHeaders = async (req, res) => {
+    const sftp = new Client();
+    try {
+        const { ip, username, password, directory, fileName, extension } = req.body;
+        if (!ip || !username || !password || !directory || !fileName || !extension) {
+            return res.status(400).json({ error: "Missing required parameters" });
+        }
+        
+        await sftp.connect({ host: ip, username: username, password: password });
+        
+        const fullPath = directory + (directory.endsWith('/') || directory.endsWith('\\') ? '' : '/') + fileName + extension;
+        
+        const fileExists = await sftp.exists(fullPath);
+        if (!fileExists) {
+            await sftp.end();
+            return res.status(404).json({ error: `File not found on remote server at: ${fullPath}` });
+        }
+        
+        const stream = sftp.createReadStream(fullPath);
+        stream.on('error', (err) => {
+            console.error('SFTP stream error:', err.message);
+        });
+
+        const rl = readline.createInterface({
+            input: stream,
+            crlfDelay: Infinity
+        });
+        
+        let firstLine = null;
+        for await (const line of rl) {
+            firstLine = line;
+            break;
+        }
+        
+        rl.close();
+        stream.destroy();
+        
+        // Wait a tiny bit for cleanup before ending the sftp connection to avoid unhandled channel closures
+        await new Promise(resolve => setTimeout(resolve, 50));
+        await sftp.end();
+        
+        if (!firstLine) {
+            return res.status(400).json({ error: "File is empty" });
+        }
+        
+        const columns = firstLine.split(',').map(col => col.trim()).filter(col => col.length > 0);
+        
+        if (columns.length === 0) {
+            return res.status(400).json({ error: "No valid columns found in the header" });
+        }
+        
+        res.json({ columns });
+    } catch (err) {
+        console.error("Error fetching SFTP headers:", err.message);
+        try { await sftp.end(); } catch (e) {}
+        res.status(500).json({ error: "Failed to read remote file headers: " + err.message });
     }
 };

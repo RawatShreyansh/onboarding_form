@@ -1031,13 +1031,18 @@ input:not(:placeholder-shown):valid {
 }
 .file-browser-path {
     background: #f4f7f6;
-    padding: 10px 15px;
+    /* padding: 10px 15px; */
+    padding-bottom: 20px;
     border-radius: 6px;
     margin-bottom: 15px;
     font-family: monospace;
     font-size: 14px;
     color: #333;
-    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 42px;
+    box-sizing: border-box;
     border: 1px solid #dee2e6;
 }
 .file-browser-list {
@@ -1093,4 +1098,4 @@ input:not(:placeholder-shown):valid {
 
 .card-icon-folder { background: #e9ecef; }
 .card-icon-kafka { background: #fef0e6; color: #fd7e14; font-size: 28px; }
-.portal-card-kafka { border-top: 4px solid #fd7e14; }
+.portal-card-kafka { border-top: 4px solid #fd7e14; }

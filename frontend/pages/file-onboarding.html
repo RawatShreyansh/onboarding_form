@@ -19,20 +19,54 @@
         <div class="stepper-container">
             <div class="step active" id="indicator-step1">
                 <div class="step-circle">1</div>
-                <div class="step-label">Source</div>
+                <div class="step-label">Connection</div>
             </div>
             <div class="step" id="indicator-step2">
                 <div class="step-circle">2</div>
-                <div class="step-label">Target</div>
+                <div class="step-label">Source</div>
             </div>
             <div class="step" id="indicator-step3">
                 <div class="step-circle">3</div>
+                <div class="step-label">Target</div>
+            </div>
+            <div class="step" id="indicator-step4">
+                <div class="step-circle">4</div>
                 <div class="step-label">DQ Rules</div>
             </div>
         </div>
 
         <div id="step1">
             <form id="step1Form">
+                <div class="ux-card">
+                    <h3 class="ux-card-title">Remote Server Connection</h3>
+                    <div class="input-grid">
+                        <div class="input-group input-span-2">
+                            <label>Server IP / Hostname</label>
+                            <input type="text" id="serverIp" placeholder="e.g., 192.168.1.100 or sftp.company.com" required />
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Username</label>
+                            <input type="text" id="serverUsername" placeholder="e.g., admin" required />
+                        </div>
+
+                        <div class="input-group">
+                            <label>Password</label>
+                            <input type="password" id="serverPassword" placeholder="Enter password" required />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="status-msg" id="step1Status"></div>
+                <div class="form-actions">
+                    <button type="button" id="testConnectionBtn" class="btn-secondary btn-flex-1">Test Connection</button>
+                    <button type="submit" id="step1ConnectBtn" class="btn-primary btn-flex-2">Connect & Proceed →</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="step2" class="d-none">
+            <form id="step2Form">
                 <div class="ux-card">
                     <h3 class="ux-card-title">Source Identity</h3>
                     <div class="input-grid">
@@ -100,13 +134,16 @@
                     </label>
                 </div>
 
-                <div class="status-msg" id="step1Status"></div>
-                <button type="submit" class="btn-primary w-100 mt-25">Next: Target Configuration →</button>
+                <div class="status-msg" id="step2Status"></div>
+                <div class="form-actions">
+                    <button type="button" id="backToStep1Btn" class="btn-secondary btn-flex-1">← Back</button>
+                    <button type="submit" class="btn-primary btn-flex-1">Next: Target Configuration →</button>
+                </div>
             </form>
         </div>
 
-        <div id="step2" class="d-none">
-            <form id="step2Form">
+        <div id="step3" class="d-none">
+            <form id="step3Form">
                 <div class="ux-card">
                     <h3 class="ux-card-title">Target Configuration</h3>
                     <div class="input-grid">
@@ -130,15 +167,15 @@
                     </div>
                 </div>
 
-                <div class="status-msg" id="step2Status"></div>
+                <div class="status-msg" id="step3Status"></div>
                 <div class="form-actions">
-                    <button type="button" id="backToStep1Btn" class="btn-secondary btn-flex-1">← Back</button>
-                    <button type="submit" id="step2ProceedBtn" class="btn-primary btn-flex-1">Proceed →</button>
+                    <button type="button" id="backToStep2Btn" class="btn-secondary btn-flex-1">← Back</button>
+                    <button type="submit" id="step3ProceedBtn" class="btn-primary btn-flex-1">Proceed →</button>
                 </div>
             </form>
         </div>
 
-        <div id="step3" class="d-none">
+        <div id="step4" class="d-none">
             <div class="mapping-rules-container">
                 <span class="text-bold text-primary">Mapping rules for fields: </span>
                 <span id="displayTableName" class="text-primary text-bold"></span>
@@ -146,9 +183,9 @@
 
             <div id="dynamicColumnsContainer"></div>
 
-            <div class="status-msg" id="step3Status"></div>
+            <div class="status-msg" id="step4Status"></div>
             <div class="form-actions">
-                <button type="button" id="backToStep2Btn" class="btn-secondary btn-flex-1">← Back</button>
+                <button type="button" id="backToStep3Btn" class="btn-secondary btn-flex-1">← Back</button>
                 <button type="button" id="saveFinalBtn" class="btn-success d-block btn-flex-2">💾 Save Pipeline
                     Configuration</button>
             </div>
@@ -169,7 +206,8 @@
             <div class="file-browser-list" id="fileBrowserList">
                 <!-- Dynamically populated folders and files -->
             </div>
-            <div class="form-actions mt-20" style="justify-content: flex-end;">
+            <div class="form-actions mt-20" style="justify-content: flex-end; gap: 10px;">
+                <button type="button" id="goUpFolderBtn" class="btn-secondary">Go Up..</button>
                 <button type="button" id="selectCurrentFolderBtn" class="btn-secondary">Select Current Folder</button>
             </div>
         </div>
