@@ -64,19 +64,19 @@ document.addEventListener('DOMContentLoaded', () => {
         dynamicContainer.innerHTML = ''; 
         displayTableName.textContent = tableName;
 
+        let currentlyExpandedOptions = null;
+        let currentlyExpandedIcon = null;
+
         columns.forEach(col => {
             
-            // Generate checkboxes, checking if they exist in the database already
             let checkboxesHTML = availableDqChecks.map(check => {
-                // Check if this column has rules, AND if this specific rule is in that list
                 const isCurrentlyActive = existingRules[col.column_name] && 
                                           existingRules[col.column_name].includes(check.dq_name);
                 
-                // If it is active, add the 'checked' attribute to the HTML element
                 const checkedAttribute = isCurrentlyActive ? 'checked' : '';
                 
                 return `
-                    <label class="checkbox-label" style="${isCurrentlyActive ? 'border-color: #0056b3; background: #f0f7ff;' : ''}">
+                    <label class="styled-checkbox-label" data-dqname="${check.dq_name.toLowerCase()}">
                         <input type="checkbox" value="${check.dq_name}" ${checkedAttribute}>
                         ${check.dq_name}
                     </label>
@@ -89,25 +89,89 @@ document.addEventListener('DOMContentLoaded', () => {
             const header = document.createElement('div');
             header.className = 'column-header';
             
-            // Minor UI tweak: If a column has existing rules, show a little badge indicating it
             const activeCount = existingRules[col.column_name] ? existingRules[col.column_name].length : 0;
-            const badgeHTML = activeCount > 0 ? `<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 10px;">${activeCount} Active</span>` : '';
+            
+            const badge = document.createElement('span');
+            badge.className = 'rule-badge';
+            badge.textContent = `${activeCount} Rule${activeCount !== 1 ? 's' : ''}`;
+            if (activeCount > 0) {
+                badge.classList.add('active');
+            }
 
-            header.innerHTML = `
-                <div class="col-name" data-colname="${col.column_name}">
-                    ${col.column_name} ${badgeHTML} <br>
-                    <span class="col-meta" style="margin-top: 4px;">Type: ${col.data_type}</span>
-                </div>
-                <div class="toggle-icon">+</div>
+            const colNameDiv = document.createElement('div');
+            colNameDiv.className = 'col-name';
+            colNameDiv.setAttribute('data-colname', col.column_name);
+            colNameDiv.innerHTML = `
+                ${col.column_name}
+                <span class="col-meta" style="margin-top: 0;">Type: ${col.data_type}</span>
             `;
+            colNameDiv.appendChild(badge);
+
+            const toggleIcon = document.createElement('div');
+            toggleIcon.className = 'toggle-icon';
+            toggleIcon.textContent = '+';
+            toggleIcon.style.transition = 'transform 0.3s ease';
+
+            header.appendChild(colNameDiv);
+            header.appendChild(toggleIcon);
 
             const optionsContainer = document.createElement('div');
             optionsContainer.className = 'dq-options';
-            optionsContainer.innerHTML = checkboxesHTML;
+            optionsContainer.innerHTML = `
+                <input type="text" class="dq-search-input" placeholder="Search Data Quality rules...">
+                <div class="dq-checkbox-list">
+                    ${checkboxesHTML}
+                </div>
+            `;
+
+            const searchInput = optionsContainer.querySelector('.dq-search-input');
+            const checkboxList = optionsContainer.querySelector('.dq-checkbox-list');
+            const allLabels = checkboxList.querySelectorAll('.styled-checkbox-label');
+
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                allLabels.forEach(label => {
+                    const ruleName = label.getAttribute('data-dqname');
+                    if (ruleName.includes(query)) {
+                        label.style.display = 'flex';
+                    } else {
+                        label.style.display = 'none';
+                    }
+                });
+            });
+
+            const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const checkedCount = optionsContainer.querySelectorAll('input[type="checkbox"]:checked').length;
+                    badge.textContent = `${checkedCount} Rule${checkedCount !== 1 ? 's' : ''}`;
+                    if (checkedCount > 0) {
+                        badge.classList.add('active');
+                    } else {
+                        badge.classList.remove('active');
+                    }
+                });
+            });
 
             header.addEventListener('click', () => {
-                const isExpanded = optionsContainer.classList.toggle('expanded');
-                header.querySelector('.toggle-icon').textContent = isExpanded ? '−' : '+';
+                const isExpanded = optionsContainer.classList.contains('expanded');
+                
+                if (currentlyExpandedOptions && currentlyExpandedOptions !== optionsContainer) {
+                    currentlyExpandedOptions.classList.remove('expanded');
+                    if (currentlyExpandedIcon) currentlyExpandedIcon.style.transform = 'rotate(0deg)';
+                }
+
+                if (isExpanded) {
+                    optionsContainer.classList.remove('expanded');
+                    toggleIcon.style.transform = 'rotate(0deg)';
+                    currentlyExpandedOptions = null;
+                    currentlyExpandedIcon = null;
+                } else {
+                    optionsContainer.classList.add('expanded');
+                    toggleIcon.style.transform = 'rotate(45deg)';
+                    currentlyExpandedOptions = optionsContainer;
+                    currentlyExpandedIcon = toggleIcon;
+                }
             });
 
             row.appendChild(header);

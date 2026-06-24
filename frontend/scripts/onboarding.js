@@ -44,6 +44,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
+    // LOGIC: SOURCE LOCATION TOGGLE
+    // ==========================================
+    const sourceLocationRadios = document.querySelectorAll('input[name="sourceLocation"]');
+    const remoteCredentialsContainer = document.getElementById('remoteCredentialsContainer');
+    const testConnectionBtn = document.getElementById('testConnectionBtn');
+    const serverIp = document.getElementById('serverIp');
+    const serverUsername = document.getElementById('serverUsername');
+    const serverPassword = document.getElementById('serverPassword');
+    const step1ConnectBtn = document.getElementById('step1ConnectBtn');
+
+    sourceLocationRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'remote') {
+                remoteCredentialsContainer.style.display = 'block';
+                testConnectionBtn.style.display = 'inline-block';
+                step1ConnectBtn.textContent = 'Connect & Proceed →';
+                serverIp.required = true;
+                serverUsername.required = true;
+                serverPassword.required = true;
+            } else {
+                remoteCredentialsContainer.style.display = 'none';
+                testConnectionBtn.style.display = 'none';
+                step1ConnectBtn.textContent = 'Proceed →';
+                serverIp.required = false;
+                serverUsername.required = false;
+                serverPassword.required = false;
+            }
+        });
+    });
+
+    // ==========================================
     // CASCADING DROPDOWNS (TARGET SCHEMA -> TABLE -> PK)
     // ==========================================
     async function loadSchemas() {
@@ -172,9 +203,18 @@ document.addEventListener('DOMContentLoaded', () => {
     step1Form.addEventListener('submit', (e) => {
         e.preventDefault(); 
         
-        savedMetadata.server_ip = document.getElementById('serverIp').value.trim();
-        savedMetadata.server_username = document.getElementById('serverUsername').value.trim();
-        savedMetadata.server_password = document.getElementById('serverPassword').value;
+        const selectedLocation = document.querySelector('input[name="sourceLocation"]:checked').value;
+        savedMetadata.source_location = selectedLocation;
+
+        if (selectedLocation === 'remote') {
+            savedMetadata.server_ip = document.getElementById('serverIp').value.trim();
+            savedMetadata.server_username = document.getElementById('serverUsername').value.trim();
+            savedMetadata.server_password = document.getElementById('serverPassword').value;
+        } else {
+            savedMetadata.server_ip = '';
+            savedMetadata.server_username = '';
+            savedMetadata.server_password = '';
+        }
 
         step1Status.textContent = "";
         step1.style.display = 'none';
@@ -249,18 +289,25 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (savedMetadata.file_has_header) {
                 try {
-                    const response = await fetch('/api/fetch-sftp-headers', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            ip: savedMetadata.server_ip,
-                            username: savedMetadata.server_username,
-                            password: savedMetadata.server_password,
-                            directory: savedMetadata.source_file_dir,
-                            fileName: rawFileName,
-                            extension: selectedExtension
-                        })
-                    });
+                    let response;
+                    if (savedMetadata.source_location === 'remote') {
+                        response = await fetch('/api/fetch-sftp-headers', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                ip: savedMetadata.server_ip,
+                                username: savedMetadata.server_username,
+                                password: savedMetadata.server_password,
+                                directory: savedMetadata.source_file_dir,
+                                fileName: rawFileName,
+                                extension: selectedExtension
+                            })
+                        });
+                    } else {
+                        const url = `/api/fetch-headers?directory=${encodeURIComponent(savedMetadata.source_file_dir)}&fileName=${encodeURIComponent(rawFileName)}&extension=${encodeURIComponent(selectedExtension)}`;
+                        response = await fetch(url);
+                    }
+                    
                     if (!response.ok) {
                         const errorData = await response.json();
                         throw new Error(errorData.error || "Failed to fetch headers");
@@ -351,9 +398,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const dynamicContainer = document.getElementById('dynamicColumnsContainer');
             dynamicContainer.innerHTML = ''; 
 
+            let currentlyExpandedOptions = null;
+            let currentlyExpandedIcon = null;
+
             fieldsArray.forEach(fieldName => {
                 let checkboxesHTML = availableDqChecks.map(check => `
-                    <label class="checkbox-label" data-dqname="${check.dq_name.toLowerCase()}">
+                    <label class="styled-checkbox-label" data-dqname="${check.dq_name.toLowerCase()}">
                         <input type="checkbox" value="${check.dq_name}">
                         ${check.dq_name}
                     </label>
@@ -364,24 +414,99 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const header = document.createElement('div');
                 header.className = 'column-header';
-                header.innerHTML = `
-                    <div class="col-name" data-colname="${fieldName}">${fieldName}</div>
-                    <div class="toggle-icon">+</div>
-                `;
+                
+                const badge = document.createElement('span');
+                badge.className = 'rule-badge';
+                badge.textContent = '0 Rules';
+
+                const colNameDiv = document.createElement('div');
+                colNameDiv.className = 'col-name';
+                colNameDiv.setAttribute('data-colname', fieldName);
+                colNameDiv.textContent = fieldName;
+                colNameDiv.appendChild(badge);
+
+                const toggleIcon = document.createElement('div');
+                toggleIcon.className = 'toggle-icon';
+                toggleIcon.textContent = '+';
+                toggleIcon.style.transition = 'transform 0.3s ease';
+
+                header.appendChild(colNameDiv);
+                header.appendChild(toggleIcon);
 
                 const optionsContainer = document.createElement('div');
                 optionsContainer.className = 'dq-options';
-                optionsContainer.innerHTML = checkboxesHTML;
+                optionsContainer.innerHTML = `
+                    <input type="text" class="dq-search-input" placeholder="Search Data Quality rules...">
+                    <div class="dq-checkbox-list">
+                        ${checkboxesHTML}
+                    </div>
+                `;
+
+                const searchInput = optionsContainer.querySelector('.dq-search-input');
+                const checkboxList = optionsContainer.querySelector('.dq-checkbox-list');
+                const allLabels = checkboxList.querySelectorAll('.styled-checkbox-label');
+
+                searchInput.addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase();
+                    allLabels.forEach(label => {
+                        const ruleName = label.getAttribute('data-dqname');
+                        if (ruleName.includes(query)) {
+                            label.style.display = 'flex';
+                        } else {
+                            label.style.display = 'none';
+                        }
+                    });
+                });
+
+                const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', () => {
+                        const checkedCount = optionsContainer.querySelectorAll('input[type="checkbox"]:checked').length;
+                        badge.textContent = `${checkedCount} Rule${checkedCount !== 1 ? 's' : ''}`;
+                        if (checkedCount > 0) {
+                            badge.classList.add('active');
+                        } else {
+                            badge.classList.remove('active');
+                        }
+                    });
+                });
 
                 header.addEventListener('click', () => {
-                    const isExpanded = optionsContainer.classList.toggle('expanded');
-                    header.querySelector('.toggle-icon').textContent = isExpanded ? '−' : '+';
+                    const isExpanded = optionsContainer.classList.contains('expanded');
+                    
+                    if (currentlyExpandedOptions && currentlyExpandedOptions !== optionsContainer) {
+                        currentlyExpandedOptions.classList.remove('expanded');
+                        if (currentlyExpandedIcon) currentlyExpandedIcon.style.transform = 'rotate(0deg)';
+                    }
+
+                    if (isExpanded) {
+                        optionsContainer.classList.remove('expanded');
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                        currentlyExpandedOptions = null;
+                        currentlyExpandedIcon = null;
+                    } else {
+                        optionsContainer.classList.add('expanded');
+                        toggleIcon.style.transform = 'rotate(45deg)';
+                        currentlyExpandedOptions = optionsContainer;
+                        currentlyExpandedIcon = toggleIcon;
+                    }
                 });
 
                 row.appendChild(header);
                 row.appendChild(optionsContainer);
                 dynamicContainer.appendChild(row);
             });
+
+            const diagnosticBox = document.createElement('div');
+            diagnosticBox.className = 'diagnostic-box';
+            diagnosticBox.innerHTML = `
+                <div class="diagnostic-icon">ℹ️</div>
+                <div>
+                    <strong>Pipeline Ready for Validation</strong><br>
+                    Configure your data quality assertions above. Once complete, your pipeline will be pre-validated and ready to run.
+                </div>
+            `;
+            dynamicContainer.appendChild(diagnosticBox);
 
             document.getElementById('displayTableName').textContent = "Parsed from input";
             step3.style.display = 'none';
@@ -476,18 +601,24 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadDirectory(path = '.') {
         fileBrowserList.innerHTML = '<div style="padding: 20px; text-align: center;">Loading...</div>';
         try {
-            const payload = {
-                ip: savedMetadata.server_ip,
-                username: savedMetadata.server_username,
-                password: savedMetadata.server_password,
-                path: path
-            };
+            let response;
+            if (savedMetadata.source_location === 'remote') {
+                const payload = {
+                    ip: savedMetadata.server_ip,
+                    username: savedMetadata.server_username,
+                    password: savedMetadata.server_password,
+                    path: path
+                };
 
-            const response = await fetch('/api/list-sftp-directory', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+                response = await fetch('/api/list-sftp-directory', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                const url = (path && path !== '.') ? `/api/list-directory?path=${encodeURIComponent(path)}` : '/api/list-directory';
+                response = await fetch(url);
+            }
 
             if (!response.ok) {
                 const errData = await response.json();
@@ -561,11 +692,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const goUpFolderBtn = document.getElementById('goUpFolderBtn');
     if (goUpFolderBtn) {
         goUpFolderBtn.addEventListener('click', () => {
-            const parts = currentLoadedPath.split('/').filter(p => p);
-            if (parts.length > 0) {
+            const isWinLocal = savedMetadata.source_location === 'local' && currentLoadedPath.includes('\\');
+            const sep = isWinLocal ? /[/\\]/ : '/';
+            const parts = currentLoadedPath.split(sep).filter(p => p);
+            
+            if (parts.length > 1) {
                 parts.pop();
-                const newPath = '/' + parts.join('/');
-                loadDirectory(newPath || '/');
+                const newPath = isWinLocal ? parts.join('\\') + '\\' : '/' + parts.join('/');
+                loadDirectory(newPath);
+            } else if (parts.length === 1 && isWinLocal) {
+                loadDirectory(parts[0] + '\\');
             } else {
                 loadDirectory('/');
             }

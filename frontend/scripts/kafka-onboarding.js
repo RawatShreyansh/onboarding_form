@@ -230,9 +230,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const dynamicContainer = document.getElementById('dynamicColumnsContainer');
             dynamicContainer.innerHTML = ''; 
 
+            let currentlyExpandedOptions = null;
+            let currentlyExpandedIcon = null;
+
             fieldsArray.forEach(fieldName => {
                 let checkboxesHTML = availableDqChecks.map(check => `
-                    <label class="checkbox-label" data-dqname="${check.dq_name.toLowerCase()}">
+                    <label class="styled-checkbox-label" data-dqname="${check.dq_name.toLowerCase()}">
                         <input type="checkbox" value="${check.dq_name}">
                         ${check.dq_name}
                     </label>
@@ -243,24 +246,99 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const header = document.createElement('div');
                 header.className = 'column-header';
-                header.innerHTML = `
-                    <div class="col-name" data-colname="${fieldName}">${fieldName}</div>
-                    <div class="toggle-icon">+</div>
-                `;
+                
+                const badge = document.createElement('span');
+                badge.className = 'rule-badge';
+                badge.textContent = '0 Rules';
+
+                const colNameDiv = document.createElement('div');
+                colNameDiv.className = 'col-name';
+                colNameDiv.setAttribute('data-colname', fieldName);
+                colNameDiv.textContent = fieldName;
+                colNameDiv.appendChild(badge);
+
+                const toggleIcon = document.createElement('div');
+                toggleIcon.className = 'toggle-icon';
+                toggleIcon.textContent = '+';
+                toggleIcon.style.transition = 'transform 0.3s ease';
+
+                header.appendChild(colNameDiv);
+                header.appendChild(toggleIcon);
 
                 const optionsContainer = document.createElement('div');
                 optionsContainer.className = 'dq-options';
-                optionsContainer.innerHTML = checkboxesHTML;
+                optionsContainer.innerHTML = `
+                    <input type="text" class="dq-search-input" placeholder="Search Data Quality rules...">
+                    <div class="dq-checkbox-list">
+                        ${checkboxesHTML}
+                    </div>
+                `;
+
+                const searchInput = optionsContainer.querySelector('.dq-search-input');
+                const checkboxList = optionsContainer.querySelector('.dq-checkbox-list');
+                const allLabels = checkboxList.querySelectorAll('.styled-checkbox-label');
+
+                searchInput.addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase();
+                    allLabels.forEach(label => {
+                        const ruleName = label.getAttribute('data-dqname');
+                        if (ruleName.includes(query)) {
+                            label.style.display = 'flex';
+                        } else {
+                            label.style.display = 'none';
+                        }
+                    });
+                });
+
+                const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', () => {
+                        const checkedCount = optionsContainer.querySelectorAll('input[type="checkbox"]:checked').length;
+                        badge.textContent = `${checkedCount} Rule${checkedCount !== 1 ? 's' : ''}`;
+                        if (checkedCount > 0) {
+                            badge.classList.add('active');
+                        } else {
+                            badge.classList.remove('active');
+                        }
+                    });
+                });
 
                 header.addEventListener('click', () => {
-                    const isExpanded = optionsContainer.classList.toggle('expanded');
-                    header.querySelector('.toggle-icon').textContent = isExpanded ? '−' : '+';
+                    const isExpanded = optionsContainer.classList.contains('expanded');
+                    
+                    if (currentlyExpandedOptions && currentlyExpandedOptions !== optionsContainer) {
+                        currentlyExpandedOptions.classList.remove('expanded');
+                        if (currentlyExpandedIcon) currentlyExpandedIcon.style.transform = 'rotate(0deg)';
+                    }
+
+                    if (isExpanded) {
+                        optionsContainer.classList.remove('expanded');
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                        currentlyExpandedOptions = null;
+                        currentlyExpandedIcon = null;
+                    } else {
+                        optionsContainer.classList.add('expanded');
+                        toggleIcon.style.transform = 'rotate(45deg)';
+                        currentlyExpandedOptions = optionsContainer;
+                        currentlyExpandedIcon = toggleIcon;
+                    }
                 });
 
                 row.appendChild(header);
                 row.appendChild(optionsContainer);
                 dynamicContainer.appendChild(row);
             });
+
+            const diagnosticBox = document.createElement('div');
+            diagnosticBox.className = 'diagnostic-box';
+            diagnosticBox.innerHTML = `
+                <div class="diagnostic-icon">ℹ️</div>
+                <div>
+                    <strong>Pipeline Ready for Validation</strong><br>
+                    Configure your data quality assertions above. Once complete, your pipeline will be pre-validated and ready to run.
+                </div>
+            `;
+            dynamicContainer.appendChild(diagnosticBox);
 
             document.getElementById('displayTableName').textContent = "Parsed from JSON keys";
             step2.style.display = 'none';
