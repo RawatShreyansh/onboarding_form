@@ -6,17 +6,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const step1 = document.getElementById('step1');
     const step2 = document.getElementById('step2');
     const step3 = document.getElementById('step3');
+    const step4 = document.getElementById('step4');
     
     const step1Form = document.getElementById('step1Form');
     const step2Form = document.getElementById('step2Form');
+    const step3Form = document.getElementById('step3Form');
     
     const indicatorStep1 = document.getElementById('indicator-step1');
     const indicatorStep2 = document.getElementById('indicator-step2');
     const indicatorStep3 = document.getElementById('indicator-step3');
+    const indicatorStep4 = document.getElementById('indicator-step4');
     
     const step1Status = document.getElementById('step1Status');
     const step2Status = document.getElementById('step2Status');
     const step3Status = document.getElementById('step3Status');
+    const step4Status = document.getElementById('step4Status');
+
+    const authTypeSelect = document.getElementById('authType');
+    const authFields = document.querySelectorAll('.auth-field');
 
     const targetSchemaSelect = document.getElementById('targetSchema');
     const targetTableSelect = document.getElementById('targetTable');
@@ -24,6 +31,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let availableDqChecks = [];
     let savedMetadata = {}; 
+
+    // ==========================================
+    // TOGGLE AUTH FIELDS
+    // ==========================================
+    authTypeSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        if (val === 'none') {
+            authFields.forEach(f => f.style.display = 'none');
+        } else {
+            authFields.forEach(f => f.style.display = 'block');
+        }
+    });
 
     // ==========================================
     // CASCADING DROPDOWNS (TARGET SCHEMA -> TABLE -> PK)
@@ -107,35 +126,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ==========================================
-    // LOGIC: STEP 1 -> KAFKA ACL POPUP -> STEP 2
+    // API: TEST CONNECTION
+    // ==========================================
+    document.getElementById('testConnectionBtn').addEventListener('click', async () => {
+        const brokers = document.getElementById('kafkaBrokers').value.trim();
+        const authType = document.getElementById('authType').value;
+        const username = document.getElementById('kafkaUsername').value.trim();
+        const password = document.getElementById('kafkaPassword').value;
+
+        if (!brokers) {
+            step1Status.textContent = "Please provide Kafka Brokers.";
+            step1Status.style.color = "#dc3545";
+            return;
+        }
+
+        step1Status.textContent = "Testing connection...";
+        step1Status.style.color = "#0056b3";
+
+        try {
+            const response = await fetch('/api/test-kafka-connection', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ brokers, authType, username, password })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                step1Status.textContent = "Connection Successful! ✅";
+                step1Status.style.color = "#28a745";
+            } else {
+                step1Status.textContent = data.error || "Connection Failed ❌";
+                step1Status.style.color = "#dc3545";
+            }
+        } catch (err) {
+            step1Status.textContent = "Network error: " + err.message;
+            step1Status.style.color = "#dc3545";
+        }
+    });
+
+    // ==========================================
+    // LOGIC: STEP 1 -> STEP 2
     // ==========================================
     step1Form.addEventListener('submit', (e) => {
         e.preventDefault(); 
-
-        const sourceFieldsInput = document.getElementById('sourceFields');
-        const fieldsErrorText = document.getElementById('fieldsError');
-        const isValidCommaList = /^[a-zA-Z0-9_]+(?:\s*,\s*[a-zA-Z0-9_]+)*$/.test(sourceFieldsInput.value.trim());
-
-        if (!isValidCommaList) {
-            sourceFieldsInput.classList.add('input-error');
-            fieldsErrorText.style.display = 'block';
-            step1Status.textContent = "Please fix the format of the fields before proceeding.";
-            step1Status.style.color = "#dc3545";
-            return;
-        } else {
-            sourceFieldsInput.classList.remove('input-error');
-            fieldsErrorText.style.display = 'none';
-            step1Status.textContent = "";
-        }
-
-        // Show Modal with the Kafka Topic name instead of a directory path
-        const topicName = document.getElementById('topicName').value.trim();
-        document.getElementById('displayTopic').textContent = topicName;
-        document.getElementById('directoryModal').classList.add('show');
-    });
-
-    document.getElementById('confirmDirectoryBtn').addEventListener('click', () => {
-        document.getElementById('directoryModal').classList.remove('show');
         
         step1.style.display = 'none';
         step2.style.display = 'block';
@@ -146,12 +179,88 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // LOGIC: STEP 2 -> STEP 3 (OR SAVE DIRECTLY)
+    // API: FETCH FIELDS
     // ==========================================
-    step2Form.addEventListener('submit', async (e) => {
+    document.getElementById('fetchFieldsBtn').addEventListener('click', async () => {
+        const brokers = document.getElementById('kafkaBrokers').value.trim();
+        const authType = document.getElementById('authType').value;
+        const username = document.getElementById('kafkaUsername').value.trim();
+        const password = document.getElementById('kafkaPassword').value;
+        const topicName = document.getElementById('topicName').value.trim();
+        const format = document.getElementById('messageFormat').value;
+
+        if (!topicName) {
+            step2Status.textContent = "Please enter a Topic Name first.";
+            step2Status.style.color = "#dc3545";
+            return;
+        }
+
+        step2Status.textContent = "Connecting to Kafka and fetching latest fields...";
+        step2Status.style.color = "#0056b3";
+
+        try {
+            const response = await fetch('/api/fetch-kafka-fields', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ brokers, authType, username, password, topicName, format })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('sourceFields').value = data.columns.join(', ');
+                document.getElementById('sourceFieldsContainer').style.display = 'block';
+                step2Status.textContent = "Successfully fetched fields ✅";
+                step2Status.style.color = "#28a745";
+            } else {
+                document.getElementById('sourceFieldsContainer').style.display = 'block';
+                step2Status.textContent = (data.error || "Failed to fetch fields") + " - Please enter fields manually.";
+                step2Status.style.color = "#dc3545";
+            }
+        } catch (err) {
+            document.getElementById('sourceFieldsContainer').style.display = 'block';
+            step2Status.textContent = "Network error: " + err.message + " - Please enter fields manually.";
+            step2Status.style.color = "#dc3545";
+        }
+    });
+
+    // ==========================================
+    // LOGIC: STEP 2 -> STEP 3
+    // ==========================================
+    step2Form.addEventListener('submit', (e) => {
+        e.preventDefault(); 
+
+        const sourceFieldsInput = document.getElementById('sourceFields');
+        const fieldsErrorText = document.getElementById('fieldsError');
+        const isValidCommaList = /^[a-zA-Z0-9_]+(?:\s*,\s*[a-zA-Z0-9_]+)*$/.test(sourceFieldsInput.value.trim());
+
+        if (!isValidCommaList) {
+            sourceFieldsInput.classList.add('input-error');
+            fieldsErrorText.style.display = 'block';
+            step2Status.textContent = "Please fix the format of the fields before proceeding.";
+            step2Status.style.color = "#dc3545";
+            return;
+        } else {
+            sourceFieldsInput.classList.remove('input-error');
+            fieldsErrorText.style.display = 'none';
+            step2Status.textContent = "";
+        }
+
+        // Proceed straight to Step 3
+        step2.style.display = 'none';
+        step3.style.display = 'block';
+        
+        indicatorStep2.classList.remove('active');
+        indicatorStep2.classList.add('completed');
+        indicatorStep3.classList.add('active');
+    });
+
+    // ==========================================
+    // LOGIC: STEP 3 -> STEP 4 (OR SAVE DIRECTLY)
+    // ==========================================
+    step3Form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Gather all inputs from Step 1 and Step 2 using KAFKA fields
+        // Gather all inputs from previous steps
         savedMetadata = {
             source_system_name: document.getElementById('sourceSystem').value.trim(),
             topic_name: document.getElementById('topicName').value.trim(),
@@ -164,18 +273,18 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (savedMetadata.dq_enable_flag) {
-            step2Status.textContent = "Generating Data Quality mapping...";
-            step2Status.style.color = "#0056b3";
+            step3Status.textContent = "Generating Data Quality mapping...";
+            step3Status.style.color = "#0056b3";
             
-            indicatorStep2.classList.remove('active');
-            indicatorStep2.classList.add('completed');
-            indicatorStep3.classList.add('active');
+            indicatorStep3.classList.remove('active');
+            indicatorStep3.classList.add('completed');
+            indicatorStep4.classList.add('active');
             
-            await buildStep3WithSourceFields(savedMetadata.source_fields);
+            await buildStep4WithSourceFields(savedMetadata.source_fields);
         } else {
-            document.getElementById('step2ProceedBtn').disabled = true;
-            step2Status.textContent = "Saving Kafka pipeline directly to database...";
-            step2Status.style.color = "#0056b3";
+            document.getElementById('step3ProceedBtn').disabled = true;
+            step3Status.textContent = "Saving Kafka pipeline directly to database...";
+            step3Status.style.color = "#0056b3";
             await sendFinalPayload(savedMetadata, {}); 
         }
     });
@@ -201,27 +310,19 @@ document.addEventListener('DOMContentLoaded', () => {
         indicatorStep2.classList.add('active');
     });
 
-    // ==========================================
-    // LOGIC: SMART BACK BUTTON (TOP LEFT)
-    // ==========================================
-    document.getElementById('smartBackBtn').addEventListener('click', (e) => {
-        e.preventDefault(); 
-
-        if (step3.style.display === 'block') {
-            document.getElementById('backToStep2Btn').click();
-        } 
-        else if (step2.style.display === 'block') {
-            document.getElementById('backToStep1Btn').click();
-        } 
-        else {
-            window.location.href = 'source-select.html'; 
-        }
+    document.getElementById('backToStep3Btn').addEventListener('click', () => {
+        step4.style.display = 'none';
+        step3.style.display = 'block';
+        step4Status.textContent = "";
+        indicatorStep4.classList.remove('active');
+        indicatorStep3.classList.remove('completed');
+        indicatorStep3.classList.add('active');
     });
 
     // ==========================================
-    // LOGIC: BUILD STEP 3 ACCORDION
+    // LOGIC: BUILD STEP 4 ACCORDION
     // ==========================================
-    async function buildStep3WithSourceFields(commaSeparatedFields) {
+    async function buildStep4WithSourceFields(commaSeparatedFields) {
         try {
             const response = await fetch('/api/dq-checks');
             availableDqChecks = await response.json();
@@ -340,20 +441,20 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             dynamicContainer.appendChild(diagnosticBox);
 
-            document.getElementById('displayTableName').textContent = "Parsed from JSON keys";
-            step2.style.display = 'none';
-            step3.style.display = 'block';
-            step2Status.textContent = "";
+            document.getElementById('displayTableName').textContent = "Parsed from Kafka Message";
+            step3.style.display = 'none';
+            step4.style.display = 'block';
+            step3Status.textContent = "";
 
         } catch (error) {
             console.error("Error:", error);
-            step2Status.textContent = "Error loading DQ rules from server.";
-            step2Status.style.color = "#dc3545";
+            step3Status.textContent = "Error loading DQ rules from server.";
+            step3Status.style.color = "#dc3545";
         }
     }
 
     // ==========================================
-    // LOGIC: FINAL SAVE FROM STEP 3
+    // LOGIC: FINAL SAVE FROM STEP 4
     // ==========================================
     document.getElementById('saveFinalBtn').addEventListener('click', async () => {
         const columnRules = {};
@@ -368,13 +469,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (Object.keys(columnRules).length === 0) {
-            step3Status.textContent = "Please select at least one DQ check before saving.";
-            step3Status.style.color = "#dc3545";
+            step4Status.textContent = "Please select at least one DQ check before saving.";
+            step4Status.style.color = "#dc3545";
             return;
         }
 
-        step3Status.textContent = "Saving Kafka pipeline configuration...";
-        step3Status.style.color = "#0056b3";
+        step4Status.textContent = "Saving Kafka pipeline configuration...";
+        step4Status.style.color = "#0056b3";
         document.getElementById('saveFinalBtn').disabled = true;
 
         await sendFinalPayload(savedMetadata, columnRules);
@@ -390,7 +491,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            // UPDATED TO KAFKA ROUTE
             const response = await fetch('/api/kafka-onboarding', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -398,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.ok) {
-                const targetStatus = metadata.dq_enable_flag ? step3Status : step2Status;
+                const targetStatus = metadata.dq_enable_flag ? step4Status : step3Status;
                 targetStatus.textContent = "Success! Kafka configuration saved to database.";
                 targetStatus.style.color = "#28a745";
                 
@@ -408,11 +508,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error(error);
-            const targetStatus = metadata.dq_enable_flag ? step3Status : step2Status;
+            const targetStatus = metadata.dq_enable_flag ? step4Status : step3Status;
             targetStatus.textContent = "Error saving configuration.";
             targetStatus.style.color = "#dc3545";
             if (metadata.dq_enable_flag) document.getElementById('saveFinalBtn').disabled = false;
-            if (!metadata.dq_enable_flag) document.getElementById('step2ProceedBtn').disabled = false;
+            if (!metadata.dq_enable_flag) document.getElementById('step3ProceedBtn').disabled = false;
         }
     }
 });

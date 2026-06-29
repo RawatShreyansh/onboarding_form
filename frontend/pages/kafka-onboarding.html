@@ -20,20 +20,64 @@
             <div class="stepper-container">
                 <div class="step active" id="indicator-step1">
                     <div class="step-circle">1</div>
-                    <div class="step-label">Topic Details</div>
+                    <div class="step-label">Connection</div>
                 </div>
                 <div class="step" id="indicator-step2">
                     <div class="step-circle">2</div>
-                    <div class="step-label">Target</div>
+                    <div class="step-label">Topic Details</div>
                 </div>
                 <div class="step" id="indicator-step3">
                     <div class="step-circle">3</div>
+                    <div class="step-label">Target</div>
+                </div>
+                <div class="step" id="indicator-step4">
+                    <div class="step-circle">4</div>
                     <div class="step-label">DQ Rules</div>
                 </div>
             </div>
 
             <div id="step1">
                 <form id="step1Form">
+                    <div class="ux-card">
+                        <h3 class="ux-card-title">Kafka Connection</h3>
+                        <div class="input-grid">
+                            <div class="input-group input-span-2">
+                                <label>Kafka Brokers (comma separated) <span class="text-danger">*</span></label>
+                                <input type="text" id="kafkaBrokers" placeholder="e.g., broker1:9092, broker2:9092" required />
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Authentication Protocol</label>
+                                <select id="authType" class="w-100">
+                                    <option value="none" selected>None (Unauthenticated)</option>
+                                    <option value="sasl_plain">SASL/PLAIN</option>
+                                    <option value="sasl_scram_256">SASL/SCRAM-SHA-256</option>
+                                    <option value="sasl_scram_512">SASL/SCRAM-SHA-512</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group auth-field" style="display: none;">
+                                <label>Username <span class="text-danger">*</span></label>
+                                <input type="text" id="kafkaUsername" placeholder="Username" />
+                            </div>
+
+                            <div class="input-group auth-field" style="display: none;">
+                                <label>Password <span class="text-danger">*</span></label>
+                                <input type="password" id="kafkaPassword" placeholder="Password" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="status-msg" id="step1Status"></div>
+                    <div class="form-actions">
+                        <button type="button" id="testConnectionBtn" class="btn-secondary btn-flex-1">Test Connection</button>
+                        <button type="submit" id="step1ProceedBtn" class="btn-primary btn-kafka btn-flex-2">Proceed →</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="step2" class="d-none">
+                <form id="step2Form">
                     <div class="ux-card">
                         <h3 class="ux-card-title">Topic Identity</h3>
                         <div class="input-grid">
@@ -50,17 +94,24 @@
                             <div class="input-group">
                                 <label>Message Payload Format</label>
                                 <select id="messageFormat" required class="w-100">
-                                    <option value="" disabled selected>Select format...</option>
-                                    <option value="JSON">JSON</option>
+                                    <option value="JSON" selected>JSON</option>
                                     <option value="AVRO">Avro</option>
                                     <option value="CSV">CSV</option>
                                 </select>
                             </div>
 
-                            <div class="input-group input-span-2">
-                                <label>Message Fields / JSON Keys (Comma Separated)</label>
+                            <div class="input-group input-span-2" id="fetchFieldsActionContainer">
+                                <label>Message Fields / JSON Keys</label>
+                                <p style="font-size: 13px; color: #6c757d; margin-bottom: 10px;">Connect to your topic and auto-detect fields from the latest message.</p>
+                                <button type="button" id="fetchFieldsBtn" class="btn-secondary w-100" style="padding: 10px; cursor: pointer; text-align: center;">
+                                    <span class="icon">⚡</span> Fetch Fields from Kafka
+                                </button>
+                            </div>
+
+                            <div class="input-group input-span-2" id="sourceFieldsContainer" style="display: none; margin-top: 15px;">
+                                <label>Fetched Fields (Comma Separated)</label>
                                 <input type="text" id="sourceFields" placeholder="e.g., transaction_id, user_id, amount" required />
-                                <small id="fieldsError" class="error-text">
+                                <small id="fieldsError" class="error-text" style="display: none;">
                                     Invalid format! Use only letters, numbers, and underscores separated by commas.
                                 </small>
                             </div>
@@ -74,13 +125,16 @@
                         </label>
                     </div>
 
-                    <div class="status-msg" id="step1Status"></div>
-                    <button type="submit" class="btn-primary btn-kafka w-100 mt-25">Next: Target Configuration →</button>
+                    <div class="status-msg" id="step2Status"></div>
+                    <div class="form-actions">
+                        <button type="button" id="backToStep1Btn" class="btn-secondary btn-flex-1">← Back</button>
+                        <button type="submit" class="btn-primary btn-kafka btn-flex-2">Next: Target Configuration →</button>
+                    </div>
                 </form>
             </div>
 
-            <div id="step2" class="d-none">
-                <form id="step2Form">
+            <div id="step3" class="d-none">
+                <form id="step3Form">
                     <div class="ux-card">
                         <h3 class="ux-card-title">Target Configuration</h3>
                         <div class="input-grid">
@@ -103,15 +157,15 @@
                         </div>
                     </div>
 
-                    <div class="status-msg" id="step2Status"></div>
+                    <div class="status-msg" id="step3Status"></div>
                     <div class="form-actions">
-                        <button type="button" id="backToStep1Btn" class="btn-secondary btn-flex-1">← Back</button>
-                        <button type="submit" id="step2ProceedBtn" class="btn-primary btn-kafka btn-flex-1">Proceed →</button>
+                        <button type="button" id="backToStep2Btn" class="btn-secondary btn-flex-1">← Back</button>
+                        <button type="submit" id="step3ProceedBtn" class="btn-primary btn-kafka btn-flex-1">Proceed →</button>
                     </div>
                 </form>
             </div>
 
-            <div id="step3" class="d-none">
+            <div id="step4" class="d-none">
                 <div class="mapping-rules-container">
                     <span class="text-bold text-primary">Mapping rules for fields: </span> 
                     <span id="displayTableName" class="text-primary text-bold"></span>
@@ -119,23 +173,11 @@
 
                 <div id="dynamicColumnsContainer"></div>
                 
-                <div class="status-msg" id="step3Status"></div>
+                <div class="status-msg" id="step4Status"></div>
                 <div class="form-actions">
-                    <button type="button" id="backToStep2Btn" class="btn-secondary btn-flex-1">← Back</button>
+                    <button type="button" id="backToStep3Btn" class="btn-secondary btn-flex-1">← Back</button>
                     <button type="button" id="saveFinalBtn" class="btn-success d-block btn-flex-2">💾 Save Kafka Pipeline</button>
                 </div>
-            </div>
-        </div>
-
-        <div id="directoryModal" class="modal-overlay">
-            <div class="source-modal-box text-center">
-                <div class="emoji-large">🔐</div>
-                <h3 class="text-orange mb-10">Security Action Required</h3>
-                <p class="font-16 mb-25" style="color: #6c757d;">
-                    Please ensure the enterprise Data Engineering Service Account has been granted <strong>READ</strong> access to the Kafka topic: <br><br>
-                    <strong id="displayTopic" class="security-box-text"></strong>
-                </p>
-                <button id="confirmDirectoryBtn" class="btn-primary btn-kafka w-100">I Understand, Proceed</button>
             </div>
         </div>
     </div>

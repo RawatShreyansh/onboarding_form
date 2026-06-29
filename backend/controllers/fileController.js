@@ -146,7 +146,7 @@ exports.fetchHeaders = async (req, res) => {
             return res.status(400).json({ error: "File is empty" });
         }
         
-        // Since we only support CSV with comma delimiter for now
+        // only supporting commas for now 
         const columns = firstLine.split(',').map(col => col.trim()).filter(col => col.length > 0);
         
         if (columns.length === 0) {
@@ -186,7 +186,7 @@ exports.listDirectory = async (req, res) => {
                     files.push({ name: item.name, isDirectory: false });
                 }
             } catch (e) {
-                // Ignore items that can't be accessed
+                
             }
         });
 
