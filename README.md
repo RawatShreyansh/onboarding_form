@@ -11,10 +11,13 @@ The Data Engineering Portal allows data engineers and administrators to easily o
 ## 🚀 Features
 
 - **Source Onboarding**: Configure new file-based batch pipelines or Kafka streaming topics using a guided step-by-step wizard.
+- **✨ AI Auto-Suggest DQ Checks**: Leverage the power of LLMs (via Groq API) to automatically scan incoming source fields and instantly suggest and apply the most appropriate Data Quality rules.
+- **Remote SFTP File Browser**: Seamlessly browse remote SFTP servers with a beautiful UI to pick files for onboarding without manually typing paths.
+- **Kafka Schema Auto-Discovery**: Automatically connects to your Kafka brokers to fetch a sample message and intelligently parse out all the JSON keys to use as pipeline fields.
 - **Dynamic Schema Discovery**: Automatically fetches and displays available PostgreSQL schemas, tables, and primary keys.
 - **Data Quality (DQ) Rule Mapping**: Assign specific data quality checks (e.g., Null Check, Unique Check) to individual columns for both files and Kafka topics.
 - **Manage Existing DQ Rules**: Search for existing file or Kafka pipeline configurations and toggle or modify their active Data Quality rules seamlessly with soft-delete capabilities.
-- **MVC Architecture**: A clean, scalable Model-View-Controller backend structure separates routing, business logic, and database interactions.
+- **Premium UI/UX**: Enjoy a fully responsive, visually stunning interface designed with modern web aesthetics, interactive sidebars, and slick micro-animations.
 
 ---
 
@@ -39,9 +42,11 @@ graph TD
         Routes[API Routes]
         Controllers[Controllers]
         Models[Models]
+        AI[Groq AI SDK]
         API --> Routes
         Routes --> Controllers
         Controllers --> Models
+        Controllers --> AI
     end
 
     subgraph Database
@@ -52,6 +57,7 @@ graph TD
     KafkaOnboarding -- HTTP POST/GET --> API
     DQManage -- HTTP POST/GET --> API
     Models -- pg connection --> PG
+    AI -- Groq API Request --> GroqCloud
 ```
 
 ---
@@ -132,6 +138,7 @@ sequenceDiagram
     participant User
     participant UI as Frontend Wizard
     participant API as Backend API
+    participant Groq as Groq AI Cloud
     participant DB as Postgres Database
 
     User->>UI: Enter Source Details, Topic/File, Fields
@@ -149,7 +156,12 @@ sequenceDiagram
     API->>DB: Query table_constraints
     DB-->>API: Return Primary Key
     API-->>UI: Auto-populate Primary Key
-    User->>UI: Assign DQ Rules to Fields
+    User->>UI: Click "AI Auto-Suggest DQ Checks"
+    UI->>API: POST /api/ai-suggest-dq
+    API->>Groq: Request Mapping Suggestions
+    Groq-->>API: JSON Field mappings
+    API-->>UI: Display Sidebar AI Suggestions
+    User->>UI: Assign DQ Rules to Fields / Apply AI Suggestions
     UI->>API: POST /api/file-onboarding OR /api/kafka-onboarding
     API->>DB: INSERT into Config Table
     API->>DB: INSERT into Metadata Table
@@ -186,6 +198,7 @@ flowchart TD
 - **Frontend**: Vanilla HTML5, CSS3, JavaScript (Fetch API). Organized via feature pages.
 - **Backend**: Node.js, Express.js (MVC Architecture).
 - **Database**: PostgreSQL (pg module).
+- **AI/LLM**: Groq SDK (llama-3.1-8b-instant model)
 - **Environment**: dotenv for environment variable management.
 - **Middleware**: CORS for cross-origin resource sharing.
 
@@ -197,6 +210,7 @@ flowchart TD
 
 - Node.js (v14 or higher)
 - PostgreSQL Database
+- Groq API Key (for AI features)
 
 ### Installation
 
@@ -214,12 +228,12 @@ flowchart TD
    ```
 
 3. **Configure Environment Variables:**
-   Copy the example environment file in the backend directory and configure it with your database credentials:
+   Copy the example environment file in the backend directory and configure it with your database and AI credentials:
 
    ```bash
    cp backend/.env.example backend/.env
    ```
-   *Edit `backend/.env` with your actual Postgres details.*
+   *Edit `backend/.env` with your actual Postgres details and your `GROQ_API_KEY`.*
 
 4. **Run the application:**
    For development (uses nodemon):
