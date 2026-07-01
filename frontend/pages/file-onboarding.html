@@ -191,18 +191,34 @@
         </div>
 
         <div id="step4" class="d-none">
-            <div class="mapping-rules-container">
-                <span class="text-bold text-primary">Mapping rules for fields: </span>
-                <span id="displayTableName" class="text-primary text-bold"></span>
-            </div>
+            <div class="step4-layout">
+                <div class="step4-main">
+                    <div class="mapping-rules-container">
+                        <span class="text-bold text-primary">Mapping rules for fields: </span>
+                        <span id="displayTableName" class="text-primary text-bold"></span>
+                    </div>
 
-            <div id="dynamicColumnsContainer"></div>
+                    <div id="dynamicColumnsContainer"></div>
 
-            <div class="status-msg" id="step4Status"></div>
-            <div class="form-actions">
-                <button type="button" id="backToStep3Btn" class="btn-secondary btn-flex-1">← Back</button>
-                <button type="button" id="saveFinalBtn" class="btn-success d-block btn-flex-2">💾 Save Pipeline
-                    Configuration</button>
+                    <div class="status-msg" id="step4Status"></div>
+                    <div class="form-actions">
+                        <button type="button" id="backToStep3Btn" class="btn-secondary btn-flex-1">← Back</button>
+                        <button type="button" id="saveFinalBtn" class="btn-success d-block btn-flex-2">💾 Save Pipeline Configuration</button>
+                    </div>
+                </div>
+
+                <div class="step4-sidebar" id="aiSidebar">
+                    <div class="sidebar-header">
+                        <span class="emoji-icon">✨</span> AI Suggestions
+                    </div>
+                    <div class="sidebar-content" id="aiSidebarContent">
+                        <div class="ai-loading">
+                            <div class="spinner"></div>
+                            <p>Analyzing fields...</p>
+                        </div>
+                    </div>
+                    <button type="button" id="applyAiBtn" class="btn-primary w-100" style="display:none; margin-top: 15px;">Apply Suggestions</button>
+                </div>
             </div>
         </div>
     </div>

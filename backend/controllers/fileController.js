@@ -326,3 +326,53 @@ exports.fetchSftpHeaders = async (req, res) => {
         res.status(500).json({ error: "Failed to read remote file headers: " + err.message });
     }
 };
+
+const Groq = require('groq-sdk');
+
+exports.aiSuggestDqChecks = async (req, res) => {
+    try {
+        const { fields, availableChecks } = req.body;
+        if (!fields || !availableChecks || !Array.isArray(fields) || !Array.isArray(availableChecks)) {
+            return res.status(400).json({ error: "Missing or invalid fields or availableChecks" });
+        }
+        
+        const apiKey = process.env.GROQ_API_KEY;
+        if (!apiKey) {
+            return res.status(500).json({ error: "GROQ_API_KEY not found in environment" });
+        }
+        
+        const groq = new Groq({ apiKey });
+
+        const prompt = `You are a Data Quality engineer. I have the following fields:
+${JSON.stringify(fields)}
+
+And the following available Data Quality checks:
+${JSON.stringify(availableChecks)}
+
+Please map each field to the most appropriate DQ checks from the available list based on its name (e.g. if field is email, map Valid Email format). A field can have 0, 1, or multiple checks.
+Respond strictly with a JSON object containing a single key "suggestions" which is an array of objects.
+Do not include any other text or markdown.
+Format:
+{
+  "suggestions": [
+    { "field": "field_name", "suggested_checks": ["Check 1", "Check 2"] }
+  ]
+}`;
+
+        const completion = await groq.chat.completions.create({
+            messages: [{ role: 'user', content: prompt }],
+            model: 'llama-3.1-8b-instant',
+            temperature: 0.1,
+            response_format: { type: 'json_object' }
+        });
+
+        let content = completion.choices[0].message.content;
+        const result = JSON.parse(content);
+        
+        res.json(result.suggestions || []);
+        
+    } catch (err) {
+        console.error("AI Suggestion Error:", err);
+        res.status(500).json({ error: "Failed to fetch AI suggestions: " + err.message });
+    }
+};

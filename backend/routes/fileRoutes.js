@@ -17,5 +17,6 @@ router.get('/api/list-directory', fileController.listDirectory);
 router.post('/api/test-sftp-connection', fileController.testSftpConnection);
 router.post('/api/list-sftp-directory', fileController.listSftpDirectory);
 router.post('/api/fetch-sftp-headers', fileController.fetchSftpHeaders);
+router.post('/api/ai-suggest-dq', fileController.aiSuggestDqChecks);
 
 module.exports = router;

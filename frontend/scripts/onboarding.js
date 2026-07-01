@@ -513,6 +513,87 @@ document.addEventListener('DOMContentLoaded', () => {
             step4.style.display = 'block';
             step3Status.textContent = "";
 
+            // --- AI Sidebar Logic ---
+            document.querySelector('.form-container').classList.add('step4-active');
+            
+            const aiSidebarContent = document.getElementById('aiSidebarContent');
+            const applyAiBtn = document.getElementById('applyAiBtn');
+            
+            aiSidebarContent.innerHTML = `
+                <div class="ai-loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing fields with AI...</p>
+                </div>
+            `;
+            applyAiBtn.style.display = 'none';
+            
+            const checksList = availableDqChecks.map(c => c.dq_name);
+            
+            try {
+                const aiRes = await fetch('/api/ai-suggest-dq', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: fieldsArray, availableChecks: checksList })
+                });
+                const suggestions = await aiRes.json();
+                
+                if (suggestions && suggestions.length > 0) {
+                    aiSidebarContent.innerHTML = '';
+                    suggestions.forEach((sugg, idx) => {
+                        const badges = sugg.suggested_checks.map(c => `<span class="ai-suggestion-badge">${c}</span>`).join('');
+                        aiSidebarContent.innerHTML += `
+                            <div class="ai-suggestion-item">
+                                <div class="ai-suggestion-field">${sugg.field}</div>
+                                <div>${badges || '<span style="color:#9ca3af; font-size:12px;">No checks</span>'}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    applyAiBtn.style.display = 'block';
+                    applyAiBtn.onclick = () => {
+                        suggestions.forEach(sugg => {
+                            // Find the col-name div that matches the field name
+                            const colDivs = Array.from(document.querySelectorAll('.col-name'));
+                            const colDiv = colDivs.find(el => el.getAttribute('data-colname') === sugg.field);
+                            
+                            if (colDiv) {
+                                // Traverse up to the row, then find the options container
+                                const row = colDiv.closest('.column-row');
+                                if (row) {
+                                    const checkboxes = row.querySelectorAll('input[type="checkbox"]');
+                                    
+                                    sugg.suggested_checks.forEach(checkName => {
+                                        // Find checkbox by value (which is dq_name)
+                                        const matchedCb = Array.from(checkboxes).find(cb => cb.value === checkName);
+                                        if (matchedCb && !matchedCb.checked) {
+                                            matchedCb.checked = true;
+                                            // Trigger change event to update badges automatically
+                                            matchedCb.dispatchEvent(new Event('change'));
+                                        }
+                                    });
+                                    
+                                    // Expand the accordion so user sees the applied checks
+                                    const optionsContainer = row.querySelector('.dq-options');
+                                    const toggleIcon = row.querySelector('.toggle-icon');
+                                    if (optionsContainer && !optionsContainer.classList.contains('expanded')) {
+                                        optionsContainer.classList.add('expanded');
+                                        if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+                                    }
+                                }
+                            }
+                        });
+                        alert('AI Suggestions Applied Successfully!');
+                    };
+                } else {
+                    aiSidebarContent.innerHTML = '<p style="color:#6b7280; font-size:14px; text-align:center;">No AI suggestions found.</p>';
+                }
+            } catch (err) {
+                console.error("Failed to load AI suggestions", err);
+                aiSidebarContent.innerHTML = '<p style="color:#dc2626; font-size:14px; text-align:center;">Failed to connect to AI engine.</p>';
+            }
+            // --- End AI Sidebar Logic ---
+
+
         } catch (error) {
             console.error("Error:", error);
             step3Status.textContent = "Error loading DQ rules from server.";
