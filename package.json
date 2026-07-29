@@ -16,7 +16,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js",
+    "dev:backend": "nodemon backend/server.js",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -30,5 +32,8 @@
     "path": "^0.12.7",
     "pg": "^8.21.0",
     "ssh2-sftp-client": "^12.1.1"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4"
   }
 }

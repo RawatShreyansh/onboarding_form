@@ -28,7 +28,13 @@ export default function KafkaOnboarding() {
   useEffect(() => {
     fetch('/api/schemas')
       .then(res => res.json())
-      .then(data => setSchemas(data.map((s: any) => s.schema_name) || []))
+      .then(data => {
+        if (Array.isArray(data)) {
+          setSchemas(data.map((s: any) => s.schema_name))
+        } else {
+          setSchemas([])
+        }
+      })
       .catch(err => console.error("Could not load schemas", err))
 
     fetch('/api/dq-checks')
@@ -47,7 +53,7 @@ export default function KafkaOnboarding() {
     if (!schema) return
     const res = await fetch(`/api/tables?schemaName=${schema}`)
     const data = await res.json()
-    setTables(data.map((t: any) => t.table_name) || [])
+    setTables(Array.isArray(data) ? data.map((t: any) => t.table_name) : [])
   }
 
   const handleTableChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {

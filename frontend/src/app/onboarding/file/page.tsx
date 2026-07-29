@@ -46,6 +46,8 @@ export default function FileOnboarding() {
       .then(data => {
         if (Array.isArray(data)) {
           setSchemas(data.map((s: any) => s.schema_name))
+        } else {
+          setSchemas([])
         }
       })
       .catch(err => console.error("Could not load schemas:", err))
@@ -55,6 +57,8 @@ export default function FileOnboarding() {
       .then(data => {
         if (Array.isArray(data)) {
           setAvailableDqChecks(data.map((d: any) => d.dq_name))
+        } else {
+          setAvailableDqChecks([])
         }
       })
       .catch(err => console.error("Could not load DQ checks:", err))
@@ -67,7 +71,7 @@ export default function FileOnboarding() {
     try {
       const res = await fetch(`/api/tables?schemaName=${schema}`)
       const data = await res.json()
-      if (Array.isArray(data)) setTables(data.map((t: any) => t.table_name))
+      setTables(Array.isArray(data) ? data.map((t: any) => t.table_name) : [])
     } catch (e) {
       console.error(e)
     }
