@@ -10,3 +10,21 @@ pnpm-debug.log*
 Thumbs.db
 desktop.ini
 .vscode/
+
+# Ignore agent skills
+.agents/
+skills/
+
+# Ignore backups of frontend and backend
+*.backup.*
+*.bak
+*_backup/
+
+# Ignore all markdown files EXCEPT README.md
+*.md
+!README.md
+!readme.md
+!Readme.md
+
+# Ignore specific files
+docker-compose.yml

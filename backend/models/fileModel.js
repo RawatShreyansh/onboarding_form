@@ -87,7 +87,7 @@ class FileModel {
     static async searchFile(fileName) {
         // 1. Find file
         const fileQuery = `
-            SELECT src_object_key, tgt_table_name, dq_enable_flag 
+            SELECT src_object_key, tgt_schema_name, tgt_table_name, dq_enable_flag, source_file_name
             FROM nifi_file_source_config 
             WHERE source_file_name = $1
         `;
@@ -99,24 +99,15 @@ class FileModel {
 
         // 2. Fetch DQ rules
         const dqQuery = `
-            SELECT dq_column_name, dq_rule_name 
+            SELECT dq_column_name, dq_rule_name, is_dq_active 
             FROM nifi_file_source_dq_config 
-            WHERE src_obj_key = $1 AND is_dq_active = 1
+            WHERE src_obj_key = $1
         `;
         const dqResult = await pool.query(dqQuery, [fileData.src_object_key]);
 
-        // 3. Transform rules
-        const existingRules = {};
-        dqResult.rows.forEach(row => {
-            if (!existingRules[row.dq_column_name]) {
-                existingRules[row.dq_column_name] = [];
-            }
-            existingRules[row.dq_column_name].push(row.dq_rule_name);
-        });
-
         return {
             ...fileData,
-            existing_rules: existingRules
+            dqRules: dqResult.rows
         };
     }
 

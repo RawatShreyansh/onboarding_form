@@ -10,16 +10,15 @@ class KafkaModel {
             const dqFlagInt = metadata.dq_enable_flag ? 1 : 0;
             const insertConfigQuery = `
                 INSERT INTO nifi_kafka_source_config (
-                    source_system, topic_name, message_format,
+                    source_system, src_kafka_topic_name,
                     tgt_schema_name, tgt_table_name, primary_key, dq_enable_flag
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7) 
+                ) VALUES ($1, $2, $3, $4, $5, $6) 
                 RETURNING src_object_key;
             `;
 
             const configValues = [
                 metadata.source_system_name, 
                 metadata.topic_name, 
-                metadata.message_format,
                 metadata.target_table_schema, 
                 metadata.target_table_name, 
                 metadata.primary_key_column,
@@ -37,7 +36,7 @@ class KafkaModel {
                 const insertMetadataQuery = `
                     INSERT INTO nifi_kafka_src_metadata (
                         src_object_key,
-                        topic_name,
+                        src_kafka_topic_name,
                         field_name
                     ) VALUES ($1, $2, $3);
                 `;
@@ -70,7 +69,7 @@ class KafkaModel {
     static async searchTopic(topicName) {
         // 1. Find topic
         const topicQuery = `
-            SELECT src_object_key, tgt_table_name, dq_enable_flag 
+            SELECT src_object_key, tgt_schema_name, tgt_table_name, dq_enable_flag, src_kafka_topic_name AS topic_name
             FROM nifi_kafka_source_config 
             WHERE src_kafka_topic_name = $1
         `;
@@ -82,24 +81,15 @@ class KafkaModel {
 
         // 2. Fetch DQ rules
         const dqQuery = `
-            SELECT dq_column_name, dq_rule_name 
+            SELECT dq_column_name, dq_rule_name, dq_flag 
             FROM nifi_kafka_source_dq_config 
-            WHERE src_obj_key = $1 AND dq_flag = 1
+            WHERE src_obj_key = $1
         `;
         const dqResult = await pool.query(dqQuery, [topicData.src_object_key]);
 
-        // 3. Transform rules
-        const existingRules = {};
-        dqResult.rows.forEach(row => {
-            if (!existingRules[row.dq_column_name]) {
-                existingRules[row.dq_column_name] = [];
-            }
-            existingRules[row.dq_column_name].push(row.dq_rule_name);
-        });
-
         return {
             ...topicData,
-            existing_rules: existingRules
+            dqRules: dqResult.rows
         };
     }
 
