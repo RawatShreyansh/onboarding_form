@@ -4,7 +4,7 @@ Welcome to the **Data Engineering Portal**! This platform provides a centralized
 
 ## 🌟 Overview
 
-The Data Engineering Portal allows data engineers and administrators to easily onboard new data sources (such as batch files or real-time Kafka streams) and define strict data quality rules before data is ingested into target PostgreSQL tables. The portal is built with a Node.js Express backend and a responsive Vanilla HTML/CSS/JS frontend, communicating with a PostgreSQL database to store configuration and metadata.
+The Data Engineering Portal allows data engineers and administrators to easily onboard new data sources (such as batch files or real-time Kafka streams) and define strict data quality rules before data is ingested into target PostgreSQL tables. The portal is built with a Node.js Express backend and a responsive Next.js (React) frontend styled with Tailwind CSS v4, communicating with a PostgreSQL database to store configuration and metadata.
 
 ---
 
@@ -28,7 +28,7 @@ The application follows a standard three-tier architecture, utilizing the MVC pa
 ```mermaid
 graph TD
     subgraph Frontend
-        UI[Web UI HTML/CSS/JS]
+        UI[Next.js React Frontend]
         FileOnboarding[File Onboarding Wizard]
         KafkaOnboarding[Kafka Onboarding Wizard]
         DQManage[Manage DQ Rules]
@@ -195,7 +195,7 @@ flowchart TD
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: Vanilla HTML5, CSS3, JavaScript (Fetch API). Organized via feature pages.
+- **Frontend**: Next.js (React), Tailwind CSS v4, Framer Motion, Lucide Icons.
 - **Backend**: Node.js, Express.js (MVC Architecture).
 - **Database**: PostgreSQL (pg module).
 - **AI/LLM**: Groq SDK (llama-3.1-8b-instant model)
@@ -235,21 +235,24 @@ flowchart TD
    ```
    *Edit `backend/.env` with your actual Postgres details and your `GROQ_API_KEY`.*
 
-4. **Run the application:**
-   For development (uses nodemon):
+4. **Run the backend:**
+   Open a terminal in the `backend` folder and start the API server:
 
    ```bash
+   cd backend
    npm run dev
    ```
 
-   For production:
+5. **Run the frontend:**
+   Open a new terminal in the `frontend` folder and start the Next.js development server:
 
    ```bash
-   npm start
+   cd frontend
+   npm run dev
    ```
 
-5. **Access the Portal:**
-   Open your browser and navigate to `http://localhost:5000`
+6. **Access the Portal:**
+   Open your browser and navigate to `http://localhost:3000`
 
 ---
 
