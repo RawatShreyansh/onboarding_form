@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, ArrowRight, Save, Database, Table as TableIcon, Key, FileUp, Folder, Server, Search, X, FolderOpen, File as FileIcon, CornerLeftUp } from 'lucide-react'
 import { AnimatedCard } from '@/components/AnimatedCard'
@@ -24,6 +24,11 @@ export default function FileOnboarding() {
     sourceExtension: '.csv',
   })
   
+  const [hasHeaderRow, setHasHeaderRow] = useState(true)
+  const [manualHeaders, setManualHeaders] = useState('')
+  const [localFile, setLocalFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [fields, setFields] = useState<{name: string, dqRules: string[]}[]>([])
   const [availableDqChecks, setAvailableDqChecks] = useState<string[]>([])
   
@@ -116,25 +121,55 @@ export default function FileOnboarding() {
 
   const fetchHeaders = async (e: React.MouseEvent) => {
     e.preventDefault()
-    try {
-      let res;
-      if (formData.sourceLocation === 'remote') {
-        res = await fetch('/api/fetch-sftp-headers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ip: formData.serverIp,
-            username: formData.serverUsername,
-            password: formData.serverPassword,
-            directory: formData.sourceFileDirectory,
-            fileName: formData.sourceFileName.replace(/\.[^/.]+$/, ""), // Strip ext if present
-            extension: formData.sourceExtension
-          })
-        })
+    
+    if (formData.sourceLocation === 'local') {
+      if (!hasHeaderRow) {
+        if (!manualHeaders.trim()) {
+          alert("Please enter headers manually.")
+          return
+        }
+        const cols = manualHeaders.split(',').map(c => c.trim()).filter(c => c.length > 0)
+        setFields(cols.map(c => ({ name: c, dqRules: [] })))
+        setStep(3)
+        return
+      } else if (localFile) {
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          const text = event.target?.result as string
+          if (text) {
+            const firstLine = text.split(/\r?\n/)[0]
+            if (firstLine) {
+              const cols = firstLine.split(',').map(c => c.trim()).filter(c => c.length > 0)
+              setFields(cols.map(c => ({ name: c, dqRules: [] })))
+              setStep(3)
+              return
+            }
+          }
+          alert("Failed to parse headers from file.")
+        }
+        reader.onerror = () => alert("Error reading file")
+        reader.readAsText(localFile)
+        return
       } else {
-        const rawFileName = formData.sourceFileName.replace(/\.[^/.]+$/, "")
-        res = await fetch(`/api/fetch-headers?directory=${encodeURIComponent(formData.sourceFileDirectory)}&fileName=${encodeURIComponent(rawFileName)}&extension=${encodeURIComponent(formData.sourceExtension)}`)
+        alert("Please select a file to extract headers.")
+        return
       }
+    }
+
+    // Remote Logic
+    try {
+      const res = await fetch('/api/fetch-sftp-headers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ip: formData.serverIp,
+          username: formData.serverUsername,
+          password: formData.serverPassword,
+          directory: formData.sourceFileDirectory,
+          fileName: formData.sourceFileName.replace(/\.[^/.]+$/, ""), // Strip ext if present
+          extension: formData.sourceExtension
+        })
+      })
       
       const data = await res.json()
       if (data.columns) {
@@ -182,6 +217,11 @@ export default function FileOnboarding() {
   }
 
   const openBrowser = () => {
+    if (formData.sourceLocation === 'local') {
+      fileInputRef.current?.click()
+      return
+    }
+
     if (formData.sourceLocation === 'remote' && testResult !== true) {
       alert("Please test and establish SFTP connection first.")
       return
@@ -189,6 +229,33 @@ export default function FileOnboarding() {
     setBrowserSearchQuery('') // Reset search on open
     setIsBrowserOpen(true)
     loadDirectory(formData.sourceFileDirectory || '.')
+  }
+
+  const handleLocalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0]
+      setLocalFile(file)
+      
+      // Browsers hide the absolute path (C:\...) for security reasons, so we provide a default placeholder 
+      // if the directory field is currently empty, allowing the user to proceed.
+      const defaultDir = formData.sourceFileDirectory || 'C:\\data\\inbound\\'
+
+      const lastDot = file.name.lastIndexOf('.')
+      if (lastDot > 0) {
+        setFormData({
+          ...formData,
+          sourceFileName: file.name.substring(0, lastDot),
+          sourceExtension: file.name.substring(lastDot),
+          sourceFileDirectory: defaultDir
+        })
+      } else {
+        setFormData({
+          ...formData,
+          sourceFileName: file.name,
+          sourceFileDirectory: defaultDir
+        })
+      }
+    }
   }
 
   const handleItemClick = (item: {name: string, isDirectory: boolean}) => {
@@ -461,9 +528,18 @@ export default function FileOnboarding() {
                         onChange={e => setFormData({...formData, sourceFileDirectory: e.target.value})}
                         placeholder={formData.sourceLocation === 'remote' ? '/home/user/data/' : 'C:\\data\\inbound\\'}
                       />
-                      <button onClick={openBrowser} className="bg-muted px-4 rounded-md font-semibold text-sm hover:bg-muted-foreground/20 flex items-center gap-2 border border-border">
-                        <Search size={16} /> Browse
-                      </button>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        onChange={handleLocalFileChange} 
+                        accept=".csv,.txt"
+                      />
+                      {formData.sourceLocation === 'remote' && (
+                        <button onClick={openBrowser} className="bg-muted px-4 rounded-md font-semibold text-sm hover:bg-muted-foreground/20 flex items-center gap-2 border border-border">
+                          <Search size={16} /> Browse Remote
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div>
@@ -489,6 +565,38 @@ export default function FileOnboarding() {
                     </select>
                   </div>
                 </div>
+
+                {formData.sourceLocation === 'local' && (
+                  <div className="mt-6 p-4 border border-border rounded-md bg-muted/20">
+                    <label className="flex items-center gap-2 font-semibold text-sm mb-4 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={hasHeaderRow} 
+                        onChange={(e) => setHasHeaderRow(e.target.checked)} 
+                      />
+                      Extract headers from sample file
+                    </label>
+
+                    {hasHeaderRow ? (
+                      <div>
+                        <button onClick={openBrowser} className="bg-secondary text-secondary-foreground px-4 py-2 rounded-md font-semibold text-sm hover:opacity-90 flex items-center gap-2">
+                          <FileIcon size={16} /> Select Local File
+                        </button>
+                        {localFile && <p className="text-xs text-muted-foreground mt-2">Selected: {localFile.name}</p>}
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-semibold mb-2">Manual Header Entry (comma-separated)</label>
+                        <textarea 
+                          className="w-full p-2 border border-border rounded-md bg-background min-h-[80px]"
+                          placeholder="e.g. customer_id, first_name, last_name"
+                          value={manualHeaders}
+                          onChange={e => setManualHeaders(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="mt-8 flex justify-between">
                 <button 
@@ -499,7 +607,7 @@ export default function FileOnboarding() {
                 </button>
                 <button 
                   onClick={fetchHeaders}
-                  disabled={!formData.sourceFileDirectory || !formData.sourceFileName}
+                  disabled={!formData.sourceFileDirectory || !formData.sourceFileName || (formData.sourceLocation === 'local' && hasHeaderRow && !localFile) || (formData.sourceLocation === 'local' && !hasHeaderRow && !manualHeaders)}
                   className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-semibold flex items-center gap-2 hover:opacity-90 disabled:opacity-50"
                 >
                   Parse Fields <ArrowRight size={18} />
