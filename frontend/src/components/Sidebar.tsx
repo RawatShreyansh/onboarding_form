@@ -23,14 +23,8 @@ export function Sidebar() {
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       className="fixed inset-y-0 left-0 w-64 bg-surface border-r border-outline-variant flex flex-col z-40"
     >
-      <div className="flex items-center gap-3 p-6 border-b border-outline-variant">
-        <div className="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
-          <Database size={24} />
-        </div>
-        <div>
-          <h1 className="font-bold text-on-surface text-lg leading-tight">DataPortal</h1>
-          <p className="text-xs text-on-surface-variant font-medium">Ops Console</p>
-        </div>
+      <div className="flex items-center p-6 border-b border-outline-variant">
+        <img src="/logo.png" alt="Company Logo" className="h-12 w-auto object-contain" />
       </div>
 
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
